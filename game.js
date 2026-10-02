@@ -256,7 +256,8 @@ function todayKey() {
   return `wealthiestSnakeMission-${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`;
 }
 function updateMission() {
-  const complete = localStorage.getItem(todayKey()) === "done";
+  let complete = false;
+  try { complete = localStorage.getItem(todayKey()) === "done"; } catch { /* Daily mission progress is optional. */ }
   document.querySelector("#missionStatus").textContent = complete ? "1 / 1 MOVES" : "0 / 1 MOVES";
   document.querySelector("#missionBar").style.width = complete ? "100%" : "0%";
   document.querySelector("#missionButton").textContent = complete ? "TODAY'S MOVE IS LOGGED ✓" : "MARK A MONEY MOVE DONE  ＋";
