@@ -79,9 +79,14 @@ vm.runInContext(fs.readFileSync("game.js", "utf8"), sandbox, { filename: "game.j
 elements.startButton.click();
 if (!elements.startOverlay.classList.contains("hidden")) throw new Error("Start overlay did not close");
 if (typeof sandbox.tick !== "function") throw new Error("Game loop did not start");
+if (!elements.rewardPreview.textContent) throw new Error("Next reward preview did not render");
+elements.pauseButton.click();
+if (elements.pauseButton.textContent !== "▶ RESUME") throw new Error("Pause control did not pause the run");
+elements.pauseButton.click();
+if (elements.pauseButton.textContent !== "Ⅱ PAUSE") throw new Error("Pause control did not resume the run");
 sandbox.tick();
 for (let step = 0; step < 15; step += 1) sandbox.tick();
 if (elements.gameOverOverlay.classList.contains("hidden")) throw new Error("Collision did not open the game-over overlay");
 elements.playAgainButton.click();
 if (!elements.gameOverOverlay.classList.contains("hidden")) throw new Error("Play Again did not restart the game");
-console.log(JSON.stringify({ ok: true, ids: ids.length, journeySpaces: (elements.journeyTrack.innerHTML.match(/journey-space/g) || []).length, investmentCards: (elements.investmentGrid.innerHTML.match(/investment-card/g) || []).length, start: "passed", movement: "passed", gameOver: "passed", restart: "passed" }));
+console.log(JSON.stringify({ ok: true, ids: ids.length, journeySpaces: (elements.journeyTrack.innerHTML.match(/journey-space/g) || []).length, investmentCards: (elements.investmentGrid.innerHTML.match(/investment-card/g) || []).length, start: "passed", pauseResume: "passed", movement: "passed", gameOver: "passed", restart: "passed" }));
