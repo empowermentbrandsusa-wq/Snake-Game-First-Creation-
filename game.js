@@ -1,363 +1,137 @@
 "use strict";
 
+/* WEALTHIEST SNAKE CHALLENGE — browser-only MVP. Keep editable money assumptions together here. */
 const canvas = document.querySelector("#gameBoard");
-const context = canvas.getContext("2d");
-const scoreElement = document.querySelector("#score");
-const bestScoreElement = document.querySelector("#bestScore");
-const walletElement = document.querySelector("#wallet");
-const rankLabel = document.querySelector("#rankLabel");
-const rankName = document.querySelector("#rankName");
-const rankTrack = document.querySelector("#rankTrack");
-const rankBar = document.querySelector("#rankBar");
-const rankAmount = document.querySelector("#rankAmount");
-const startOverlay = document.querySelector("#startOverlay");
-const gameOverOverlay = document.querySelector("#gameOverOverlay");
-const finalScoreElement = document.querySelector("#finalScore");
-const resultMessage = document.querySelector("#resultMessage");
-const endEyebrow = document.querySelector("#endEyebrow");
-const soundButton = document.querySelector("#soundButton");
-const moveFeedback = document.querySelector("#moveFeedback");
+const ctx = canvas.getContext("2d");
+const $ = selector => document.querySelector(selector);
 const gridSize = 20;
 const cellSize = canvas.width / gridSize;
 const speed = 115;
-const CASH_PER_BILL = 250;
-const rankTiers = [
-  { floor: 0, name: "STREET STARTER" },
-  { floor: 500, name: "CASH CHASER" },
-  { floor: 1500, name: "STACK BUILDER" },
-  { floor: 3000, name: "MONEY MOVER" },
-  { floor: 6000, name: "WEALTH BOSS" },
-];
-const directions = {
-  up: { x: 0, y: -1 },
-  down: { x: 0, y: 1 },
-  left: { x: -1, y: 0 },
-  right: { x: 1, y: 0 },
-};
 const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
-
-function readNumber(key, fallback = 0) {
-  try {
-    const value = Number(localStorage.getItem(key));
-    return Number.isFinite(value) && value >= 0 ? value : fallback;
-  } catch {
-    return fallback;
-  }
-}
-function writeValue(key, value) {
-  try { localStorage.setItem(key, String(value)); } catch { /* The game remains playable without saved progress. */ }
-}
-function readObject(key, fallback) {
-  try {
-    const value = JSON.parse(localStorage.getItem(key));
-    return value && typeof value === "object" ? value : fallback;
-  } catch {
-    return fallback;
-  }
-}
-function getLegacyBest() {
-  const oldPoints = readNumber("pocketSnakeBest", 0);
-  return Math.floor(oldPoints / 10) * CASH_PER_BILL;
-}
-
-let snake;
-let food;
-let direction;
-let queuedDirection;
-let score = 0;
-let bestScore = Math.max(readNumber("wealthiestSnakeBest", 0), getLegacyBest());
-let wallet = readNumber("wealthiestSnakeWallet", 0);
-let lifetimeEarned = readNumber("wealthiestSnakeLifetime", wallet);
-let allocations = readObject("wealthiestSnakeMoves", { save: 0, invest: 0, learn: 0, enjoy: 0 });
-let timer;
-let playing = false;
-let soundEnabled = true;
-let touchStart = null;
-let turnedThisStep = false;
-let audioContext;
-
-function formatMoney(value) { return money.format(value); }
-
-function updateStats() {
-  scoreElement.textContent = formatMoney(score);
-  bestScoreElement.textContent = formatMoney(bestScore);
-  walletElement.textContent = formatMoney(wallet);
-  updateRank();
-}
-
-function updateRank() {
-  let index = rankTiers.length - 1;
-  for (let i = 0; i < rankTiers.length - 1; i += 1) {
-    if (score < rankTiers[i + 1].floor) { index = i; break; }
-  }
-  const current = rankTiers[index];
-  const next = rankTiers[index + 1];
-  const progress = next ? Math.floor(((score - current.floor) / (next.floor - current.floor)) * 100) : 100;
-  rankLabel.textContent = `LEVEL ${String(index + 1).padStart(2, "0")} • ARCADE RANK`;
-  rankName.textContent = current.name;
-  rankBar.style.width = `${progress}%`;
-  rankTrack.setAttribute("aria-valuenow", String(progress));
-  rankAmount.textContent = next ? `${formatMoney(next.floor - score)} TO NEXT RANK` : "TOP RANK • KEEP STACKING";
-}
-
-function resetState() {
-  snake = [{ x: 9, y: 10 }, { x: 8, y: 10 }, { x: 7, y: 10 }];
-  direction = directions.right;
-  queuedDirection = directions.right;
-  turnedThisStep = false;
-  score = 0;
-  food = makeFood();
-  updateStats();
-  draw();
-}
-
-function makeFood() {
-  if (snake.length >= gridSize * gridSize) return null;
-  let next;
-  do {
-    next = { x: Math.floor(Math.random() * gridSize), y: Math.floor(Math.random() * gridSize) };
-  } while (snake.some(part => part.x === next.x && part.y === next.y));
-  return next;
-}
-
-function startGame() {
-  clearInterval(timer);
-  resetState();
-  playing = true;
-  startOverlay.classList.add("hidden");
-  gameOverOverlay.classList.add("hidden");
-  timer = setInterval(step, speed);
-}
-
-function step() {
-  direction = queuedDirection;
-  turnedThisStep = false;
-  const head = snake[0];
-  const nextHead = { x: head.x + direction.x, y: head.y + direction.y };
-  const hitWall = nextHead.x < 0 || nextHead.x >= gridSize || nextHead.y < 0 || nextHead.y >= gridSize;
-  const eating = food && nextHead.x === food.x && nextHead.y === food.y;
-  const bodyToCheck = eating ? snake : snake.slice(0, -1);
-  const hitSelf = bodyToCheck.some(part => part.x === nextHead.x && part.y === nextHead.y);
-
-  if (hitWall || hitSelf) {
-    endGame(false);
-    return;
-  }
-
-  snake.unshift(nextHead);
-  if (eating) {
-    score += CASH_PER_BILL;
-    wallet += CASH_PER_BILL;
-    lifetimeEarned += CASH_PER_BILL;
-    bestScore = Math.max(score, bestScore);
-    writeValue("wealthiestSnakeBest", bestScore);
-    writeValue("wealthiestSnakeWallet", wallet);
-    writeValue("wealthiestSnakeLifetime", lifetimeEarned);
-    food = makeFood();
-    updateStats();
-    tone(620, 0.07);
-    if (!food) {
-      draw();
-      endGame(true);
-      return;
-    }
-  } else {
-    snake.pop();
-  }
-  draw();
-}
-
-function endGame(won) {
-  playing = false;
-  clearInterval(timer);
-  finalScoreElement.textContent = won ? "You own the whole board!" : `Run cash: ${formatMoney(score)}`;
-  if (won) {
-    endEyebrow.textContent = "BOARD CLEARED";
-    resultMessage.textContent = "Every cash stack is yours. That’s a legendary run!";
-  } else {
-    endEyebrow.textContent = "RUN COMPLETE";
-    resultMessage.textContent = score > 0 && score >= bestScore
-      ? "New personal best. Put that game cash to work in the wallet."
-      : "Every run is a new chance to level up. Your game cash stays in your wallet.";
-  }
-  gameOverOverlay.classList.remove("hidden");
-  tone(won ? 800 : 135, won ? 0.24 : 0.2);
-}
-
-function changeDirection(name) {
-  if (!playing || turnedThisStep) return;
-  const next = directions[name];
-  if (!next) return;
-  if (next.x + direction.x === 0 && next.y + direction.y === 0) return;
-  queuedDirection = next;
-  turnedThisStep = true;
-}
-
-function roundedCell(x, y, inset, radius) {
-  const left = x * cellSize + inset;
-  const top = y * cellSize + inset;
-  const size = cellSize - inset * 2;
-  context.beginPath();
-  if (typeof context.roundRect === "function") {
-    context.roundRect(left, top, size, size, radius);
-  } else {
-    context.rect(left, top, size, size);
-  }
-}
-
-function drawCash(x, y) {
-  const left = x * cellSize + 3;
-  const top = y * cellSize + 5;
-  context.fillStyle = "#ffc94a";
-  context.fillRect(left, top, cellSize - 6, cellSize - 10);
-  context.strokeStyle = "#80551a";
-  context.lineWidth = 1;
-  context.strokeRect(left + 1, top + 1, cellSize - 8, cellSize - 12);
-  context.fillStyle = "#44300f";
-  context.font = "bold 10px system-ui, sans-serif";
-  context.textAlign = "center";
-  context.textBaseline = "middle";
-  context.fillText("$", left + (cellSize - 6) / 2, top + (cellSize - 10) / 2);
-}
-
-function draw() {
-  context.fillStyle = "#171c12";
-  context.fillRect(0, 0, canvas.width, canvas.height);
-  context.strokeStyle = "rgba(216,255,53,.06)";
-  context.lineWidth = 1;
-  for (let i = 1; i < gridSize; i += 1) {
-    context.beginPath();
-    context.moveTo(i * cellSize, 0);
-    context.lineTo(i * cellSize, canvas.height);
-    context.moveTo(0, i * cellSize);
-    context.lineTo(canvas.width, i * cellSize);
-    context.stroke();
-  }
-
-  if (food) drawCash(food.x, food.y);
-
-  snake.forEach((part, index) => {
-    context.fillStyle = index === 0 ? "#f4ffad" : `hsl(${76 - Math.min(index, 18)}, 90%, ${58 - Math.min(index, 12)}%)`;
-    roundedCell(part.x, part.y, 1.5, index === 0 ? 6 : 5);
-    context.fill();
-  });
-
-  const head = snake[0];
-  context.fillStyle = "#222512";
-  if (direction.x !== 0) {
-    const eyeX = head.x * cellSize + (direction.x > 0 ? 13 : 6);
-    [6, 14].forEach(offset => {
-      context.beginPath();
-      context.arc(eyeX, head.y * cellSize + offset, 1.6, 0, Math.PI * 2);
-      context.fill();
-    });
-  } else {
-    const eyeY = head.y * cellSize + (direction.y > 0 ? 14 : 6);
-    [6, 14].forEach(offset => {
-      context.beginPath();
-      context.arc(head.x * cellSize + offset, eyeY, 1.6, 0, Math.PI * 2);
-      context.fill();
-    });
-  }
-}
-
-function tone(frequency, duration) {
-  if (!soundEnabled) return;
-  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-  if (!AudioContextClass) return;
-  try {
-    audioContext ||= new AudioContextClass();
-    if (audioContext.state === "suspended") audioContext.resume();
-    const oscillator = audioContext.createOscillator();
-    const gain = audioContext.createGain();
-    oscillator.frequency.value = frequency;
-    gain.gain.setValueAtTime(0.045, audioContext.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + duration);
-    oscillator.connect(gain).connect(audioContext.destination);
-    oscillator.start();
-    oscillator.stop(audioContext.currentTime + duration);
-  } catch { /* Audio is optional; movement never depends on it. */ }
-}
-
-function todayKey() {
-  const today = new Date();
-  return `wealthiestSnakeMission-${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`;
-}
-function updateMission() {
-  let complete = false;
-  try { complete = localStorage.getItem(todayKey()) === "done"; } catch { /* Daily mission progress is optional. */ }
-  document.querySelector("#missionStatus").textContent = complete ? "1 / 1 MOVES" : "0 / 1 MOVES";
-  document.querySelector("#missionBar").style.width = complete ? "100%" : "0%";
-  document.querySelector("#missionButton").textContent = complete ? "TODAY'S MOVE IS LOGGED ✓" : "MARK A MONEY MOVE DONE  ＋";
-  document.querySelector("#missionButton").disabled = complete;
-}
-function practiceMove(type) {
-  const amount = Number(document.querySelector("#allocationAmount").value);
-  if (wallet < amount) {
-    moveFeedback.textContent = `You need ${formatMoney(amount)} in game cash first. Play a run to stack more.`;
-    return;
-  }
-  const descriptions = {
-    save: "Practice choice: save it for emergencies or a near-term goal.",
-    invest: "Practice choice: investing can grow over time, but value can also fall. Learn the risks first.",
-    learn: "Practice choice: use part of a budget to build a useful skill or learn more.",
-    enjoy: "Practice choice: planned spending can be part of a balanced money plan.",
-  };
-  wallet -= amount;
-  allocations[type] = (Number(allocations[type]) || 0) + amount;
-  writeValue("wealthiestSnakeWallet", wallet);
-  writeValue("wealthiestSnakeMoves", JSON.stringify(allocations));
-  updateStats();
-  moveFeedback.textContent = `${formatMoney(amount)} simulated toward “${type}.” ${descriptions[type]}`;
-  tone(500, 0.08);
-}
-
-document.addEventListener("keydown", event => {
-  if (event.target instanceof HTMLElement && ["INPUT", "SELECT", "TEXTAREA", "BUTTON"].includes(event.target.tagName)) return;
-  const keyMap = { ArrowUp: "up", w: "up", W: "up", ArrowDown: "down", s: "down", S: "down", ArrowLeft: "left", a: "left", A: "left", ArrowRight: "right", d: "right", D: "right" };
-  const move = keyMap[event.key];
-  if (move && playing) {
-    event.preventDefault();
-    changeDirection(move);
-  }
-});
-
-document.querySelectorAll("[data-direction]").forEach(button => {
-  button.addEventListener("pointerdown", event => {
-    event.preventDefault();
-    changeDirection(button.dataset.direction);
-  });
-});
-
-canvas.addEventListener("pointerdown", event => {
-  touchStart = { x: event.clientX, y: event.clientY };
-});
-canvas.addEventListener("pointerup", event => {
-  if (!touchStart) return;
-  const dx = event.clientX - touchStart.x;
-  const dy = event.clientY - touchStart.y;
-  touchStart = null;
-  if (Math.max(Math.abs(dx), Math.abs(dy)) < 20) return;
-  changeDirection(Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? "right" : "left") : (dy > 0 ? "down" : "up"));
-});
-canvas.addEventListener("pointercancel", () => { touchStart = null; });
-
-document.querySelector("#startButton").addEventListener("click", startGame);
-document.querySelector("#playAgainButton").addEventListener("click", startGame);
-document.querySelector("#restartButton").addEventListener("click", startGame);
-soundButton.addEventListener("click", () => {
-  soundEnabled = !soundEnabled;
-  soundButton.textContent = soundEnabled ? "♫ SOUND ON" : "♫ SOUND OFF";
-  soundButton.setAttribute("aria-label", soundEnabled ? "Mute sound" : "Turn on sound");
-});
-document.querySelector("#missionButton").addEventListener("click", () => {
-  writeValue(todayKey(), "done");
-  updateMission();
-});
-document.querySelectorAll("[data-move]").forEach(button => {
-  button.addEventListener("click", () => practiceMove(button.dataset.move));
-});
-
-bestScoreElement.textContent = formatMoney(bestScore);
-updateMission();
-resetState();
+const formatMoney = value => money.format(Math.round(Number(value) || 0));
+const RATE_ASSUMPTIONS = {
+  updated: "October 2, 2026",
+  label: "Educational estimates — not live quotes or current offers",
+  items: [
+    { id:"savings", name:"High-yield savings / cash", icon:"🏦", low:0.03, high:0.04, income:0.035, risk:"Very low", riskScore:1, liquidity:"Usually easy access; account rules can vary.", horizon:"Short", what:"A cash account that may pay interest while keeping money accessible.", pros:"Accessible; low price swings; useful for emergencies and short goals.", cons:"Rates can change; growth may lag inflation over long periods.", rules:"Compare fees, withdrawal limits, deposit protection, and the provider's terms.", best:"Emergency funds and near-term needs.", goals:["emergency","house","education"] },
+    { id:"cd", name:"Certificates of deposit (CDs)", icon:"🧾", low:0.03, high:0.05, income:0.04, risk:"Very low", riskScore:1, liquidity:"Usually locked until maturity; early withdrawal may cost a penalty.", horizon:"Short / medium", what:"A bank deposit that generally pays a stated rate for a set term.", pros:"Predictable rate when opened; can match a known future date.", cons:"Less flexible; rates may reset lower when you renew.", rules:"Check maturity date, early withdrawal penalty, and applicable deposit insurance.", best:"Money with a known date and low tolerance for price changes.", goals:["emergency","house","education"] },
+    { id:"tbill", name:"Treasury bills", icon:"🇺🇸", low:0.03, high:0.05, income:0.04, risk:"Low", riskScore:2, liquidity:"Matures in a year or less; selling early can change the price.", horizon:"Short", what:"Short-term debt issued by the U.S. Treasury, typically sold at a discount.", pros:"Short maturities; backed by the U.S. government; interest often has special state-tax treatment.", cons:"Reinvestment rates change; inflation can outpace the return.", rules:"Understand auction dates, maturity, broker terms, and federal tax treatment.", best:"Short-term goals or a planned cash ladder.", goals:["emergency","house"] },
+    { id:"government-bonds", name:"Government bonds", icon:"🏛️", low:0.02, high:0.05, income:0.035, risk:"Low to moderate", riskScore:2, liquidity:"Can often be sold, but market prices move before maturity.", horizon:"Medium / long", what:"Loans to governments that may pay interest and return principal at maturity.", pros:"Can add stability and income; different maturities provide choices.", cons:"Prices can fall when rates rise; inflation and reinvestment risk remain.", rules:"Know the issuer, maturity, credit risk, and whether you hold to maturity.", best:"Diversification, planned income, and balancing stock risk.", goals:["retirement","income","house"] },
+    { id:"bond-fund", name:"Bond funds", icon:"📃", low:0.02, high:0.06, income:0.04, risk:"Low to moderate", riskScore:2, liquidity:"Usually tradable on market days; value can change daily.", horizon:"Medium / long", what:"A pooled fund holding many bonds; unlike an individual bond, it has no single maturity date.", pros:"Diversification and convenient access to a basket of bonds.", cons:"Fund price and distributions can fall; fees reduce returns.", rules:"Review duration, credit quality, expense ratio, and tax treatment.", best:"Income or diversification within a broader portfolio.", goals:["retirement","income","house"] },
+    { id:"broad-index", name:"Broad-market index fund", icon:"🌐", low:0.05, high:0.09, income:0.015, risk:"Moderate to high", riskScore:4, liquidity:"Usually tradable on market days; selling may lock in a loss.", horizon:"Long", what:"A fund that tracks a wide group of companies across a market.", pros:"Broad diversification; simple; often relatively low cost.", cons:"Can drop sharply; no guaranteed return; needs time to ride out declines.", rules:"Check index coverage, expense ratio, taxes, and account type.", best:"Long-term growth when the money can stay invested.", goals:["retirement","growth"] },
+    { id:"sp500", name:"S&P 500-style index fund", icon:"📈", low:0.05, high:0.09, income:0.015, risk:"Moderate to high", riskScore:4, liquidity:"Usually tradable on market days; price changes with the market.", horizon:"Long", what:"A fund tracking large U.S. companies; it is diversified across companies but concentrated in one market segment.", pros:"Straightforward market exposure; often relatively low cost.", cons:"Large U.S. companies can fall together; not a complete global portfolio.", rules:"Compare tracking index, fees, taxes, and overlap with other holdings.", best:"Long-term U.S. large-company exposure.", goals:["retirement","growth"] },
+    { id:"total-market", name:"Total-market fund", icon:"🗺️", low:0.05, high:0.09, income:0.015, risk:"Moderate to high", riskScore:4, liquidity:"Usually tradable on market days; value moves with markets.", horizon:"Long", what:"A fund designed to hold a broad slice of a country's stock market, often across company sizes.", pros:"Broad exposure in one holding; can be simple and low cost.", cons:"Still exposed to market declines; country concentration may remain.", rules:"Review its index, fees, holdings, and overlap with other funds.", best:"Long-term diversified stock exposure.", goals:["retirement","growth"] },
+    { id:"dividend", name:"Dividend stocks / funds", icon:"💸", low:0.03, high:0.08, income:0.035, risk:"Moderate to high", riskScore:4, liquidity:"Usually tradable on market days; income can change.", horizon:"Medium / long", what:"Shares or funds focused on companies that may distribute part of earnings to owners.", pros:"Potential cash distributions; can combine income with price growth.", cons:"Dividends can be reduced; a high yield can signal higher risk; share prices fall too.", rules:"Check diversification, payout sustainability, fees, and taxes on distributions.", best:"Investors who understand income is variable and want equity exposure.", goals:["income","retirement"] },
+    { id:"individual", name:"Individual stocks", icon:"🏢", low:-0.2, high:0.2, income:0.01, risk:"Very high", riskScore:5, liquidity:"Often tradable on market days, but a sale can realize a large loss.", horizon:"Long", what:"Ownership in one company rather than a diversified fund.", pros:"You choose specific businesses; upside can be substantial.", cons:"One company can lose much or all of its value; requires research and concentration control.", rules:"Understand the company, valuation, fees, taxes, and position size.", best:"A limited, researched portion of a diversified plan.", goals:["growth","income"] },
+    { id:"reit", name:"REITs", icon:"🏘️", low:0.03, high:0.09, income:0.04, risk:"Moderate to high", riskScore:4, liquidity:"Public REITs trade on market days; property itself is illiquid.", what:"A real-estate investment trust owns or finances real estate and may distribute income.", horizon:"Medium / long", pros:"Property exposure without buying a building; may provide income.", cons:"Sensitive to rates, debt, vacancies, and property markets; distributions vary.", rules:"Check property type, leverage, fees, and how distributions are taxed.", best:"Diversifying a broader portfolio with real-estate exposure.", goals:["income","growth"] },
+    { id:"real-estate", name:"Real-estate investment", icon:"🏠", low:0.02, high:0.10, income:0.04, risk:"Moderate to very high", riskScore:4, liquidity:"Often slow and costly to sell; varies by investment structure.", what:"Direct property or a pooled real-estate investment. Rental income and resale values are uncertain.", pros:"Potential rent and appreciation; can add a tangible asset.", cons:"Repairs, vacancies, insurance, taxes, debt, and concentration can be costly.", rules:"Model all costs, legal duties, financing, location, and exit options.", best:"Long-term ownership for someone prepared to manage risk and expenses.", goals:["income","growth","house"] },
+    { id:"business", name:"Small-business ownership", icon:"🛠️", low:-0.1, high:0.15, income:0, risk:"Very high", riskScore:5, liquidity:"Usually difficult to sell quickly; value may be uncertain.", what:"Capital or work invested in a private business with uncertain earnings and resale value.", pros:"Can create income, jobs, and control; success may build enterprise value.", cons:"Many businesses struggle; capital and time can be lost.", rules:"Review cash flow, ownership terms, taxes, contracts, and an exit plan.", best:"A business builder with a clear plan and risk capacity.", goals:["business","income","growth"] },
+    { id:"gold", name:"Gold / alternative assets", icon:"🪙", low:-0.02, high:0.06, income:0, risk:"Moderate to high", riskScore:4, liquidity:"Depends on the asset; dealer spreads and fees may apply.", what:"Gold and other alternatives may behave differently from stocks and bonds, but can be volatile.", pros:"May diversify some risks; tangible forms can be held directly.", cons:"No built-in earnings for gold; storage, fees, and price swings matter.", rules:"Check costs, authenticity, storage, taxes, and resale spread.", best:"A limited diversifier after core needs are considered.", goals:["growth","income"] },
+    { id:"retirement", name:"Retirement accounts", icon:"🌅", low:0, high:0, income:0, risk:"Depends on holdings", riskScore:3, liquidity:"Access can be restricted; taxes or penalties may apply.", what:"An account wrapper that may offer tax advantages; the investments inside determine risk and return.", pros:"Can support long-term saving; some plans include employer contributions.", cons:"Rules, contribution limits, and withdrawal restrictions apply.", rules:"Account rules change; compare employer match, fees, tax treatment, and eligibility.", best:"Long-term retirement saving with attention to account rules.", goals:["retirement"] }
+  ]
+};
+const COLLECTIBLES = [
+  {id:"cash",name:"Cash stack",icon:"💵",value:250,kind:"cash",color:"#78ce8f",label:"CASH"},
+  {id:"gold",name:"Gold reserve",icon:"🪙",value:200,kind:"gold",color:"#e5bd69",label:"GOLD"},
+  {id:"house",name:"Starter home",icon:"🏠",value:500,kind:"property",color:"#91d6b0",label:"HOUSE"},
+  {id:"realty",name:"Real estate",icon:"🏢",value:350,kind:"property",color:"#82b9a0",label:"REALTY"},
+  {id:"investment",name:"Market stake",icon:"📈",value:300,kind:"investment",color:"#a4d886",label:"FUND"},
+  {id:"luxury",name:"Luxury asset",icon:"💎",value:250,kind:"lifestyleAsset",color:"#d4c2ee",label:"LUXURY"},
+  {id:"banking",name:"Banking opportunity",icon:"🏦",value:200,kind:"savings",color:"#98b9ce",label:"BANK"},
+  {id:"education",name:"Skill boost",icon:"📚",value:175,kind:"skill",color:"#dfbf86",label:"SKILL"},
+  {id:"business",name:"Business seed",icon:"🛠️",value:750,kind:"business",color:"#84cad0",label:"BUSINESS",unlockAt:8}
+];
+const JOURNEY = [
+  {name:"Cash",icon:"💵",note:"Notice what comes in and what goes out."}, {name:"Gold",icon:"🪙",note:"Alternative assets have different risks and no guaranteed income."}, {name:"Houses",icon:"🏠",note:"Property may produce income and brings upkeep costs."}, {name:"Apartments",icon:"🏢",note:"Rental income can be offset by vacancies, financing, and repairs."}, {name:"Commercial Property",icon:"🏬",note:"Commercial real estate has lease, tenant, and economic risks."}, {name:"Land",icon:"🌱",note:"Land may not produce income and can take time to sell."},
+  {name:"Stocks",icon:"📈",note:"Stocks represent ownership and their prices can move sharply."}, {name:"Businesses",icon:"🛠️",note:"Ownership can build value and comes with operating risk."}, {name:"Education & Skills",icon:"📚",note:"Skills and knowledge can expand choices."}, {name:"Emergency Fund",icon:"🛟",note:"Accessible savings can help with surprises."}, {name:"Retirement",icon:"🌅",note:"Long horizons can make consistency matter."}, {name:"Trust & Legacy",icon:"🔐",note:"Trust is a separate educational category, not a legal trust."},
+  {name:"Charity",icon:"🤝",note:"Generosity is a choice to include in your plan."}, {name:"Luxury",icon:"💎",note:"Enjoyment is a choice; spending changes net worth."}, {name:"Debt",icon:"💳",note:"Borrowing can add purchasing power and a liability."}, {name:"Taxes",icon:"🧾",note:"A simulated tax bill reminds you to plan for obligations."}, {name:"Insurance",icon:"🛡️",note:"Protection has a cost and may reduce a covered loss."}, {name:"Investment Opportunity",icon:"🎯",note:"Compare an opportunity's risk, fees, timeline, and purpose."}
+];
+const PRINCIPLES = [
+  ["COMPOUNDING 💰","Your money can earn money, and then those earnings can earn money too. Time can make a big difference."],
+  ["DIVERSIFICATION 🌐","Holding different kinds of investments can reduce reliance on one company or asset. It cannot remove all risk."],
+  ["DOLLAR-COST AVERAGING 📅","Investing a set amount on a schedule buys at different prices. It does not guarantee a profit or prevent a loss."],
+  ["LIQUIDITY 💧","Liquidity means how quickly you can access money at a fair price. A house is usually less liquid than cash."],
+  ["FEES + TAXES 🧾","Fees reduce what stays invested. Taxes depend on the account, asset, location, and your circumstances."],
+  ["SAVING VS INVESTING 🏦","Savings are generally more stable and accessible. Investing can offer more growth potential with more risk."],
+  ["INFLATION 🛒","Inflation means prices rise over time, so the same amount of money may buy less in the future."],
+  ["DIVIDENDS + INTEREST 💸","Some assets pay cash distributions or interest. These amounts can change and are not guaranteed."],
+  ["RISK + RETURN ⚖️","Potentially higher returns usually come with more uncertainty. A larger projection is not a promise."],
+  ["ASSETS + LIABILITIES 🧮","Assets are resources you own; liabilities are what you owe. Net worth is assets minus liabilities."]
+];
+const RANKS = [
+  {floor:0,name:"STREET STARTER"},{floor:500,name:"SAVER"},{floor:2000,name:"INVESTOR"},{floor:6000,name:"OWNER"},{floor:15000,name:"MOGUL"},{floor:40000,name:"WEALTH BUILDER"}
+];
+const COLORS=["#67c991","#e2bb68","#8ac6aa","#91aee0","#d092c8","#dd8e68","#a2cf67","#c3aa8a","#84cad0","#d89965","#94b68a","#d9ca82"];
+const DIRECTION={up:{x:0,y:-1},down:{x:0,y:1},left:{x:-1,y:0},right:{x:1,y:0}};
+const STORAGE={best:"wealthiestSnakeBest",wallet:"wealthiestSnakeWallet",lifetime:"wealthiestSnakeLifetime",moves:"wealthiestSnakeMoves",assets:"wealthiestSnakeAssets",debt:"wealthiestSnakeDebt",giving:"wealthiestSnakeGiving",lifestyle:"wealthiestSnakeLifestyle",xp:"wealthiestSnakeXP",collected:"wealthiestSnakeCollected",savings:"wealthiestSnakeSavings",portfolio:"wealthiestSnakePortfolio",badges:"wealthiestSnakeBadges"};
+function readNumber(key,fallback=0){try{const n=Number(localStorage.getItem(key));return Number.isFinite(n)&&n>=0?n:fallback}catch{return fallback}}
+function readObject(key,fallback){try{const parsed=JSON.parse(localStorage.getItem(key));return parsed&&typeof parsed==="object"?parsed:fallback}catch{return fallback}}
+function save(key,value){try{localStorage.setItem(key,typeof value==="string"?value:JSON.stringify(value))}catch{/* playable without local storage */}}
+function oldBest(){return Math.floor(readNumber("pocketSnakeBest",0)/10)*250}
+let snake,food,direction,queuedDirection,timer,playing=false,soundEnabled=true,touchStart=null,turnedThisStep=false,audioContext;
+let score=0,bestScore=Math.max(readNumber(STORAGE.best),oldBest()),wallet=readNumber(STORAGE.wallet),lifetimeEarned=readNumber(STORAGE.lifetime,wallet),xp=readNumber(STORAGE.xp),collected=readNumber(STORAGE.collected),debt=readNumber(STORAGE.debt),giving=readNumber(STORAGE.giving),lifestyle=readNumber(STORAGE.lifestyle),savings=readNumber(STORAGE.savings);
+let moves=readObject(STORAGE.moves,{save:0,invest:0,learn:0,enjoy:0});
+let assets=readObject(STORAGE.assets,[]); if(!Array.isArray(assets))assets=[];
+let portfolio=readObject(STORAGE.portfolio,{positions:{}});portfolio.positions ||= {};
+let earnedBadges=readObject(STORAGE.badges,[]); if(!Array.isArray(earnedBadges))earnedBadges=[];
+// One-time migration: preserve balances recorded by the original wallet move buttons.
+try { if(!localStorage.getItem("wealthiestSnakeMigrationV2")) {
+  savings=Math.max(savings,Number(moves.save)||0); lifestyle=Math.max(lifestyle,Number(moves.enjoy)||0); xp=Math.max(xp,Number(moves.learn)||0);
+  if((Number(moves.invest)||0)>0&&!assets.some(a=>a.source==="Legacy wallet move")) assets.push({id:"legacy-investment",name:"Earlier practice investments",icon:"📈",value:Number(moves.invest),kind:"investment",source:"Legacy wallet move",created:0});
+  localStorage.setItem("wealthiestSnakeMigrationV2","done");
+} } catch {/* Local storage is optional. */}
+let journeyIndex=readNumber("wealthiestSnakeJourney",0)%JOURNEY.length;
+let currentGoal="emergency",lastPrinciple=-1;
+function persist(){save(STORAGE.wallet,wallet);save(STORAGE.best,bestScore);save(STORAGE.lifetime,lifetimeEarned);save(STORAGE.moves,moves);save(STORAGE.assets,assets);save(STORAGE.debt,debt);save(STORAGE.giving,giving);save(STORAGE.lifestyle,lifestyle);save(STORAGE.xp,xp);save(STORAGE.collected,collected);save(STORAGE.savings,savings);save(STORAGE.portfolio,portfolio);save(STORAGE.badges,earnedBadges);save("wealthiestSnakeJourney",journeyIndex)}
+function holdingsTotal(kind){return assets.filter(a=>a.kind===kind).reduce((sum,a)=>sum+(Number(a.value)||0),0)}
+function portfolioTotal(){return Object.values(portfolio.positions).reduce((sum,p)=>sum+(Number(p.amount)||0),0)}
+function totals(){const investment=holdingsTotal("investment");const property=holdingsTotal("property");const business=holdingsTotal("business")+holdingsTotal("skill");const gold=holdingsTotal("gold")+holdingsTotal("lifestyleAsset");const savingsTotal=savings+holdingsTotal("savings");const trust=holdingsTotal("trust");const assetsTotal=wallet+savingsTotal+investment+property+business+gold+trust;return {investment,property,business,gold,savingsTotal,trust,assetsTotal,liabilities:debt,net:assetsTotal-debt}}
+function updateStats(){const t=totals();$("#score").textContent=formatMoney(score);$("#bestScore").textContent=formatMoney(bestScore);$("#wallet").textContent=formatMoney(wallet);$("#xpValue").textContent=String(xp);if($("#xpBadge"))$("#xpBadge").textContent=String(xp);$("#dashSavings").textContent=formatMoney(t.savingsTotal);$("#dashInvestments").textContent=formatMoney(t.investment);$("#dashProperty").textContent=formatMoney(t.property);$("#dashBusiness").textContent=formatMoney(t.business);$("#dashGold").textContent=formatMoney(t.gold);$("#dashTrust").textContent=formatMoney(t.trust);$("#dashGiving").textContent=formatMoney(giving);$("#dashDebt").textContent=formatMoney(debt);$("#dashLifestyle").textContent=formatMoney(lifestyle);$("#dashAssets").textContent=formatMoney(t.assetsTotal);$("#dashLiabilities").textContent=formatMoney(t.liabilities);$("#netWorth").textContent=formatMoney(t.net);updateRank(t.net);renderAssets();renderJourney();renderPortfolio()}
+function updateRank(net=totals().net){let i=RANKS.length-1;for(let n=0;n<RANKS.length-1;n++){if(net<RANKS[n+1].floor){i=n;break}}const cur=RANKS[i],next=RANKS[i+1];const progress=next?Math.max(0,Math.min(100,Math.floor((net-cur.floor)/(next.floor-cur.floor)*100))):100;$("#rankName").textContent=cur.name;$("#rankLabel").textContent=`LEVEL ${String(i+1).padStart(2,"0")}`;$("#rankBar").style.width=`${progress}%`;$("#rankTrack").setAttribute("aria-valuenow",String(progress));$("#rankAmount").textContent=next?`${formatMoney(next.floor-net)} TO NEXT LEVEL`:"TOP RANK • KEEP BUILDING"}
+function makeFood(){if(snake.length>=gridSize*gridSize)return null;let point;do{point={x:Math.floor(Math.random()*gridSize),y:Math.floor(Math.random()*gridSize)}}while(snake.some(part=>part.x===point.x&&part.y===point.y));const available=COLLECTIBLES.filter(item=>!item.unlockAt||collected>=item.unlockAt);return {...point,reward:available[Math.floor(Math.random()*available.length)]}}
+function resetState(){snake=[{x:9,y:10},{x:8,y:10},{x:7,y:10}];direction=DIRECTION.right;queuedDirection=DIRECTION.right;turnedThisStep=false;score=0;food=makeFood();updateStats();draw()}
+function startGame(){clearInterval(timer);resetState();playing=true;$("#startOverlay").classList.add("hidden");$("#gameOverOverlay").classList.add("hidden");timer=setInterval(step,speed)}
+function addAsset(item){const asset={id:`a${Date.now()}${Math.random().toString(16).slice(2,6)}`,name:item.name,icon:item.icon,value:item.value,kind:item.kind,source:"Snake Run",created:Date.now()};assets.unshift(asset);return asset}
+function awardReward(reward){collected+=1;xp+=10;score+=reward.value;bestScore=Math.max(bestScore,score);const info={cash:"Cash added to your game wallet.",gold:"Gold added to alternative assets. Value can move.",property:"Property added to your simulated asset vault.",investment:"Investment value added to your simulated portfolio.",lifestyleAsset:"A luxury collectible added to assets; luxury spending still has a cost.",savings:"Banking opportunity added to simulated savings.",skill:"Skill collectible added to your education and business assets."};if(reward.kind==="cash"){wallet+=reward.value;lifetimeEarned+=reward.value}else if(reward.kind==="savings"){savings+=reward.value}else{addAsset(reward)}
+  updateJourney(); persist(); updateStats(); checkAchievements(); toastFeedback(`${reward.icon} ${reward.name}: ${formatMoney(reward.value)}. ${info[reward.kind]}${collected===8?" 🔓 Business seed unlocked!":""}`);tone(640,0.07)}
+function updateJourney(){journeyIndex=(journeyIndex+1)%JOURNEY.length;const tile=JOURNEY[journeyIndex];if(tile.name==="Taxes"&&wallet>=40){wallet-=40;lifestyle+=40;toastFeedback("🧾 Simulated tax expense: $40. Plan for obligations.")}else if(tile.name==="Emergency Fund"&&wallet>=25){wallet-=25;savings+=25;toastFeedback("🛟 $25 moved from cash into your simulated emergency fund.")}else if(tile.name==="Insurance"&&wallet>=15){wallet-=15;lifestyle+=15;toastFeedback("🛡️ Simulated $15 insurance premium. Real protection depends on policy terms.")}else if(tile.name==="Debt"){debt+=50;wallet+=50;toastFeedback("💳 Simulated credit choice: +$50 cash and +$50 liability. Borrowing adds debt.")}else if(tile.name==="Giving"&&wallet>=25){wallet-=25;giving+=25;toastFeedback("🤝 $25 moved to simulated giving. Generosity is part of your plan.")}else if(tile.name==="Luxury"&&wallet>=50){wallet-=50;lifestyle+=50;toastFeedback("💎 $50 simulated lifestyle spend. Enjoyment affects net worth.")}}
+function step(){direction=queuedDirection;turnedThisStep=false;const head=snake[0],next={x:head.x+direction.x,y:head.y+direction.y};const wall=next.x<0||next.x>=gridSize||next.y<0||next.y>=gridSize;const eating=food&&next.x===food.x&&next.y===food.y;const body=eating?snake:snake.slice(0,-1);if(wall||body.some(part=>part.x===next.x&&part.y===next.y)){endGame(false);return}snake.unshift(next);if(eating){awardReward(food.reward);food=makeFood();if(!food){draw();endGame(true);return}}else snake.pop();draw()}
+function endGame(won){playing=false;clearInterval(timer);$("#finalScore").textContent=won?"You own the whole board!":`Run score: ${formatMoney(score)}`;$("#endEyebrow").textContent=won?"BOARD CLEARED":"RUN COMPLETE";$("#resultMessage").textContent=won?"A legendary run. Your assets and game cash are saved.":score>0&&score>=bestScore?"New personal best. Your collected assets stay in the vault.":"Every run is a new chance to level up. Your game wallet and assets stay saved.";$("#gameOverOverlay").classList.remove("hidden");tone(won?800:135,won?.24:.2);checkAchievements()}
+function changeDirection(name){if(!playing||turnedThisStep)return;const next=DIRECTION[name];if(!next||next.x+direction.x===0&&next.y+direction.y===0)return;queuedDirection=next;turnedThisStep=true}
+function roundCell(x,y,inset,radius){const l=x*cellSize+inset,t=y*cellSize+inset,s=cellSize-inset*2;ctx.beginPath();if(ctx.roundRect)ctx.roundRect(l,t,s,s,radius);else ctx.rect(l,t,s,s)}
+function drawFood(){if(!food)return;const reward=food.reward;ctx.save();ctx.shadowColor=reward.color;ctx.shadowBlur=10;ctx.fillStyle=reward.color;ctx.beginPath();ctx.arc(food.x*cellSize+cellSize/2,food.y*cellSize+cellSize/2,cellSize*.39,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;ctx.fillStyle="#172018";ctx.font="bold 11px system-ui";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(reward.icon,food.x*cellSize+cellSize/2,food.y*cellSize+cellSize/2+.3);ctx.restore()}
+function draw(){ctx.fillStyle="#151a15";ctx.fillRect(0,0,canvas.width,canvas.height);ctx.strokeStyle="rgba(255,255,255,.035)";ctx.lineWidth=1;for(let i=1;i<gridSize;i++){ctx.beginPath();ctx.moveTo(i*cellSize,0);ctx.lineTo(i*cellSize,canvas.height);ctx.moveTo(0,i*cellSize);ctx.lineTo(canvas.width,i*cellSize);ctx.stroke()}drawFood();snake.forEach((part,index)=>{ctx.fillStyle=index===0?"#e8d398":`hsl(${140-Math.min(index,24)},48%,${57-Math.min(index,12)}%)`;roundCell(part.x,part.y,1.5,index===0?6:5);ctx.fill()});if(!snake.length)return;const h=snake[0];ctx.fillStyle="#172018";if(direction.x!==0){const ex=h.x*cellSize+(direction.x>0?13:6);[6,14].forEach(off=>{ctx.beginPath();ctx.arc(ex,h.y*cellSize+off,1.5,0,Math.PI*2);ctx.fill()})}else{const ey=h.y*cellSize+(direction.y>0?14:6);[6,14].forEach(off=>{ctx.beginPath();ctx.arc(h.x*cellSize+off,ey,1.5,0,Math.PI*2);ctx.fill()})}}
+function tone(freq,duration){if(!soundEnabled)return;const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;try{audioContext||=new AC();if(audioContext.state==="suspended")audioContext.resume();const oscillator=audioContext.createOscillator(),gain=audioContext.createGain();oscillator.frequency.value=freq;gain.gain.setValueAtTime(.04,audioContext.currentTime);gain.gain.exponentialRampToValueAtTime(.001,audioContext.currentTime+duration);oscillator.connect(gain).connect(audioContext.destination);oscillator.start();oscillator.stop(audioContext.currentTime+duration)}catch{/* sound is optional */}}
+let toastTimer;
+function toastFeedback(message){const feedback=$("#moveFeedback");if(feedback){feedback.textContent=message;clearTimeout(toastTimer);toastTimer=setTimeout(()=>{feedback.textContent="Your game choices change cash, assets, debt, and net worth."},5200)}}
+function updateMission(){const d=new Date(),key=`wealthiestSnakeMission-${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;let done=false,streak=readNumber("wealthiestSnakeMissionStreak",0);try{done=localStorage.getItem(key)==="done"}catch{}$("#missionStreak").textContent=`${streak} DAY STREAK`;$("#missionStatus").textContent=done?"1 / 1 MOVES":"0 / 1 MOVES";$("#missionBar").style.width=done?"100%":"0%";$("#missionButton").textContent=done?"TODAY'S MOVE IS LOGGED ✓":"MARK A MONEY MOVE DONE  ＋";$("#missionButton").disabled=done}
+function practiceMove(type){const amount=Number($("#allocationAmount").value);const cost=type==="rental"?Math.max(500,amount*2):type==="luxury"?Math.max(250,amount):amount;if(wallet<cost){toastFeedback(`You need ${formatMoney(cost)} in game cash. Collect cash on a Snake run first.`);return}wallet-=cost;moves[type]=(Number(moves[type])||0)+cost;let label="";if(type==="save"){savings+=amount;label="savings"}if(type==="invest"){addAsset({name:"Broad-market practice investment",icon:"📈",value:amount,kind:"investment"});label="simulated investment"}if(type==="learn"){xp+=10;label="learning"}if(type==="enjoy"){lifestyle+=amount;label="lifestyle spending"}if(type==="give"){giving+=amount;label="simulated giving"}if(type==="rental"){addAsset({name:"Practice rental property",icon:"🏠",value:cost,kind:"property"});label="rental property"}if(type==="luxury"){lifestyle+=cost;addAsset({name:"Luxury vehicle (simulated)",icon:"🚘",value:Math.round(cost*.7),kind:"lifestyleAsset"});label="luxury vehicle; spending recorded"}persist();updateStats();checkAchievements();const notes={save:"Savings stay accessible in this simplified game.",invest:"Investment value can rise or fall; no return is guaranteed.",learn:"Learning earns XP; education can build earning power.",enjoy:"Lifestyle spending reduces net worth.",give:"Giving reduces cash and raises the giving total.",rental:"Property adds an asset; real expenses, vacancies, and financing are not modeled.",luxury:"Lifestyle spending is recorded and a lower resale-value collectible is added."};toastFeedback(`${formatMoney(cost)} moved to ${label}. ${notes[type]}`);tone(520,.08)}
+function renderJourney(){const el=$("#journeyTrack");el.innerHTML=JOURNEY.map((space,index)=>`<div class="journey-space ${index===journeyIndex?"current":index<journeyIndex?"passed":""}" ${index===journeyIndex?'aria-current="step"':""}><b>${space.icon}</b><span>${space.name.toUpperCase()}</span></div>`).join("");const current=JOURNEY[journeyIndex];$("#stageTitle").textContent=current.name;$("#stageNote").textContent=current.note;$("#journeyStatus").textContent=`${collected} SPACES CLEARED`;$("#journeyNext").textContent=`NEXT: ${JOURNEY[(journeyIndex+1)%JOURNEY.length].name.toUpperCase()}`}
+const ACTIONS={cash:["Save","Invest","Spend","Donate"],property:["Hold","Sell","Rent","Upgrade","Trust","Collateral"],gold:["Hold","Sell","Trade","Trust"],investment:["Hold","Sell","Add to trust"],lifestyleAsset:["Hold","Sell","Donate"],savings:["Hold","Withdraw","Trust"],skill:["Hold","Use skill","Donate"],business:["Hold","Sell","Trust"]};
+function removePortfolioPosition(asset){if(asset.portfolioId&&Number(portfolio.positions[asset.portfolioId])>0)portfolio.positions[asset.portfolioId]=Math.max(0,portfolio.positions[asset.portfolioId]-Number(asset.value||0))}
+function assetAction(asset,action){if(action==="Sell"||action==="Withdraw"){wallet+=asset.value;removePortfolioPosition(asset);assets=assets.filter(a=>a.id!==asset.id);toastFeedback(`${asset.name} converted to ${formatMoney(asset.value)} cash. Selling can change your asset mix.`)}else if(action==="Rent"){const rent=Math.max(10,Math.round(asset.value*.03));wallet+=rent;toastFeedback(`Simulated rent: +${formatMoney(rent)} cash. Costs and vacancies are not modeled.`)}else if(action==="Upgrade"){const cost=Math.max(50,Math.round(asset.value*.1));if(wallet<cost){toastFeedback(`Upgrade needs ${formatMoney(cost)} cash. Save or collect more first.`);return}wallet-=cost;asset.value=Math.round(asset.value*1.12);toastFeedback(`Upgrade simulated: spent ${formatMoney(cost)}; displayed property value rose 12%. Actual values are uncertain.`)}else if(action==="Trust"||action==="Add to trust"){removePortfolioPosition(asset);asset.kind="trust";toastFeedback(`${asset.name} moved to simulated Trust Assets. This is a game category, not a legal trust.`)}else if(action==="Collateral"){const loan=Math.round(asset.value*.4);debt+=loan;wallet+=loan;toastFeedback(`Simulated loan: +${formatMoney(loan)} cash and +${formatMoney(loan)} debt. Collateral may be at risk under real loan terms.`)}else if(action==="Donate"){giving+=asset.value;removePortfolioPosition(asset);assets=assets.filter(a=>a.id!==asset.id);toastFeedback(`${formatMoney(asset.value)} moved to simulated giving.`)}else if(action==="Invest"){removePortfolioPosition(asset);assets=assets.filter(a=>a.id!==asset.id);addAsset({name:"Invested cash",icon:"📈",value:asset.value,kind:"investment"});toastFeedback(`${formatMoney(asset.value)} moved to simulated investments.`)}else if(action==="Spend"){wallet+=asset.value;removePortfolioPosition(asset);assets=assets.filter(a=>a.id!==asset.id);lifestyle+=asset.value;toastFeedback(`${asset.name} sold for ${formatMoney(asset.value)} and counted as lifestyle spending.`)}else if(action==="Trade"){asset.value=Math.round(asset.value*.95);toastFeedback(`Simulated trade completed after a 5% spread: current displayed value ${formatMoney(asset.value)}.`)}else if(action==="Use skill"){wallet+=100;removePortfolioPosition(asset);assets=assets.filter(a=>a.id!==asset.id);toastFeedback("Skill used: +$100 simulated income. Skills can improve earning power; results vary.")}else{toastFeedback(`${asset.name} held. Holding keeps its value exposed to possible changes.`)}persist();updateStats();checkAchievements()}
+function renderAssets(){const el=$("#assetList");if(!assets.length){el.innerHTML="<p class=\"empty-state\">Your next run can start the collection.</p>";return}el.innerHTML=assets.map(asset=>{const options=ACTIONS[asset.kind]||["Hold","Sell"];return `<article class="asset-row"><div class="asset-info"><span>${asset.icon||"✨"}</span><strong>${escapeHtml(asset.name)}</strong><small>${asset.kind==="trust"?"Simulated trust category":`${asset.kind} • ${asset.source||"Game asset"}`}</small></div><b class="asset-value">${formatMoney(asset.value)}</b><div class="asset-actions">${options.map(action=>`<button type="button" data-asset-id="${asset.id}" data-action="${action}">${action}</button>`).join("")}</div></article>`}).join("");el.querySelectorAll("[data-asset-id]").forEach(button=>button.addEventListener("click",()=>{const asset=assets.find(a=>a.id===button.dataset.assetId);if(asset)assetAction(asset,button.dataset.action)}))}
+function escapeHtml(value){return String(value).replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]))}
+function getAllocation(){return Object.fromEntries(RATE_ASSUMPTIONS.items.map(item=>[item.id,Math.max(0,Number(document.querySelector(`[data-allocation="${item.id}"]`)?.value)||0)]))}
+function selectedAllocation(){const allocation=getAllocation();return Object.entries(allocation).filter(([,amount])=>amount>0)}
+function projection(allocation,monthly,years){let total=0;const months=years*12;for(let m=0;m<months;m++){for(const item of RATE_ASSUMPTIONS.items){const amount=allocation[item.id]||0;if(amount)total+=amount}for(const item of RATE_ASSUMPTIONS.items){const amount=allocation[item.id]||0;if(amount)total+=total*(amount/Math.max(1,Object.values(allocation).reduce((a,b)=>a+b,0)))*((item.low+item.high)/2)/12}}return total}
+function renderAllocationControls(){const host=$("#allocationList");const budget=Number($("#portfolioBudget").value);host.innerHTML=RATE_ASSUMPTIONS.items.map(item=>`<label class="allocation-row"><span class="allocation-meta"><strong>${item.icon} ${item.name}</strong><span>${item.low===0&&item.high===0?"Return depends on holdings":`${(item.low*100).toFixed(0)}%–${(item.high*100).toFixed(0)}% educational range`} · ${item.risk} risk</span></span><span class="amount-control"><span>$</span><input type="number" min="0" max="${budget}" step="25" value="0" data-allocation="${item.id}" aria-label="Amount for ${item.name}"></span></label>`).join("");host.querySelectorAll("[data-allocation]").forEach(input=>input.addEventListener("input",()=>{enforceBudget(input);renderPortfolio()}));renderPortfolio()}
+function enforceBudget(changed){const budget=Number($("#portfolioBudget").value);let total=Object.values(getAllocation()).reduce((sum,val)=>sum+val,0);if(total>budget){changed.value=String(Math.max(0,Number(changed.value)-(total-budget)));toastFeedback(`Allocation capped at ${formatMoney(budget)}.`)}}
+function renderPortfolio(){if(!$("#allocationList"))return;const rows=selectedAllocation(),allocation=getAllocation(),budget=Number($("#portfolioBudget").value),total=rows.reduce((sum,[,amount])=>sum+amount,0),years=Number($("#projectionYears").value);let rate=0,income=0,risk=0,weightTotal=0;for(const [id,amount] of rows){const item=RATE_ASSUMPTIONS.items.find(x=>x.id===id);if(!item)continue;const midpoint=(item.low+item.high)/2;rate+=midpoint*amount;income+=item.income*amount;risk+=item.riskScore*amount;weightTotal+=amount}const annual=weightTotal?rate/weightTotal:0;const projected=projection(allocation,0,years);const growth=projected-contributions;const contributions=total*years*12;$("#summaryInvested").textContent=formatMoney(contributions);$("#estimatedIncome").textContent=formatMoney(income);$("#estimatedGrowth").textContent=`${growth>=0?"+":""}${formatMoney(growth)}`;$("#projectedValue").textContent=formatMoney(projected);$("#portfolioRisk").textContent=weightTotal?riskLabel(risk/weightTotal):"—";$("#projectionNote").textContent=`Hypothetical ${years}-year projection using monthly contributions and an illustrative ${ (annual*100).toFixed(1)}% weighted annual rate. It assumes same-month contributions repeated for ${years} years and monthly compounding; actual results vary, and losses are possible.`;const bar=$("#allocationBar");bar.innerHTML=rows.map(([id,amount])=>`<i title="${id}" style="width:${total?amount/total*100:0}%;background:${COLORS[RATE_ASSUMPTIONS.items.findIndex(it=>it.id===id)%COLORS.length]}"></i>`).join("");$("#portfolioFeedback").textContent=`Allocated ${formatMoney(total)} of ${formatMoney(budget)} challenge budget. Game wallet: ${formatMoney(wallet)}.`}
+function riskLabel(score){if(score<1.5)return"Very low";if(score<2.5)return"Low";if(score<3.5)return"Moderate";if(score<4.5)return"High";return"Very high"}
+function goalSuggestion(){const goal=$("#goalSelect").value;const suggested=RATE_ASSUMPTIONS.items.filter(i=>i.goals.includes(goal)).slice(0,3).map(i=>i.name).join(", ");$("#portfolioFeedback").textContent=`For ${goal.replaceAll("-"," ")}, compare: ${suggested||"the options below"}. These are learning prompts, not a recommended portfolio.`}
+function applyPortfolio(){const rows=selectedAllocation(),total=rows.reduce((s,[,a])=>s+a,0);if(!total){$("#portfolioFeedback").textContent="Set an amount for at least one investment first.";return}if(total>wallet){$("#portfolioFeedback").textContent=`Your wallet has ${formatMoney(wallet)}. Play to earn more or lower the allocation.`;return}for(const [id,amount] of rows){portfolio.positions[id]=(portfolio.positions[id]||0)+amount}wallet-=total;rows.forEach(([id,amount])=>{const item=RATE_ASSUMPTIONS.items.find(i=>i.id===id);assets.unshift({id:`p${Date.now()}${Math.random().toString(16).slice(2,6)}`,name:item.name,icon:item.icon,value:amount,kind:id==="gold"?"gold":id==="savings"?"savings":"investment",source:"Portfolio Builder",portfolioId:id,created:Date.now()})});persist();updateStats();$("#portfolioFeedback").textContent=`${formatMoney(total)} moved from game cash into your simulated portfolio. No real trade was made.`;checkAchievements()}
+function renderInvestmentCards(){const host=$("#investmentGrid");host.innerHTML=RATE_ASSUMPTIONS.items.map(item=>`<article class="investment-card"><h3>${item.icon} ${item.name}</h3><p class="investment-what">${item.what}</p><div class="investment-tags"><span>RETURN ${item.low===0&&item.high===0?"VARIES":`${(item.low*100).toFixed(0)}–${(item.high*100).toFixed(0)}%*`}</span><span>${item.risk.toUpperCase()} RISK</span><span>${item.horizon.toUpperCase()}</span></div><details><summary>Pros, cons + details</summary><p><b>Potential return:</b> ${item.low===0&&item.high===0?"Depends on the investments held.":`${(item.low*100).toFixed(0)}% to ${(item.high*100).toFixed(0)}% illustrative annual range; not guaranteed.`}</p><p><b>Liquidity:</b> ${item.liquidity}</p><p><b>Pros:</b> ${item.pros}</p><p><b>Cons:</b> ${item.cons}</p><p><b>Rules / costs / tax:</b> ${item.rules}</p><p><b>Best used for:</b> ${item.best}</p></details></article>`).join("");$("#rateNote").textContent=`* ${RATE_ASSUMPTIONS.label}. Educational estimates — updated ${RATE_ASSUMPTIONS.updated}. These broad illustrative annual nominal ranges are editable in RATE_ASSUMPTIONS in game.js; they are not live financial data, forecasts, or guaranteed returns. Actual returns, fees, taxes, rules, and rates vary.`}
+function updatePrinciple(){lastPrinciple=(lastPrinciple+1)%PRINCIPLES.length;const [title,copy]=PRINCIPLES[lastPrinciple];$("#principleCallout").innerHTML=`<strong>${title}</strong><span>${copy}</span>`}
+function checkAchievements(){const t=totals();const candidates=[{id:"first-asset",name:"First Acquisition",icon:"🗝️",ok:assets.length>0},{id:"first-investment",name:"First Investment",icon:"📈",ok:t.investment>=250},{id:"emergency",name:"Buffer Builder",icon:"🛟",ok:t.savingsTotal>=1000},{id:"diversified",name:"Diversified Mix",icon:"🌐",ok:Object.values(portfolio.positions).filter(n=>n>0).length>=3},{id:"property",name:"First Property",icon:"🏠",ok:t.property>0},{id:"giver",name:"Generous Giver",icon:"🤝",ok:giving>=100},{id:"debt",name:"Clear Run",icon:"🧾",ok:debt===0&&collected>=4},{id:"ten-k",name:"$10K Net Worth",icon:"💰",ok:t.net>=10000},{id:"twentyfive-k",name:"$25K Net Worth",icon:"🏆",ok:t.net>=25000},{id:"investor",name:"$500 Investor",icon:"⚡",ok:t.investment>=500}];for(const b of candidates){if(b.ok&&!earnedBadges.includes(b.id)){earnedBadges.push(b.id);xp+=25;save(STORAGE.badges,earnedBadges);save(STORAGE.xp,xp);toastFeedback(`🏆 Achievement unlocked: ${b.name} (+25 XP)!`)}}renderAchievements(candidates)}
+function renderAchievements(candidates){const el=$("#badgeGrid");if(!el)return;el.innerHTML=candidates.map(b=>`<div class="badge ${earnedBadges.includes(b.id)?"unlocked":""}" title="${b.name}"><span>${b.icon}</span><small>${b.name}</small></div>`).join("");const challenges=[{name:"Build a $1,000 emergency fund",done:totals().savingsTotal>=1000},{name:"Invest your first $500",done:totals().investment>=500},{name:"Own your first property",done:totals().property>0},{name:"Reach $10,000 net worth",done:totals().net>=10000},{name:"Give $100 to a cause",done:giving>=100},{name:"Build a diversified portfolio",done:Object.values(portfolio.positions).filter(n=>n>0).length>=3},{name:"Keep simulated debt at zero",done:debt===0&&collected>=4},{name:"Grow a business asset",done:totals().business>=500},{name:"Complete a daily mission",done:readNumber("wealthiestSnakeMissionStreak",0)>0}];const list=$("#challengeList");if(list)list.innerHTML=challenges.map(c=>`<div class="challenge-item ${c.done?"done":""}"><span>${c.done?"✓":"○"}</span>${c.name}</div>`).join("")}
+function todayKey(){const d=new Date();return`wealthiestSnakeMission-${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`}
+document.addEventListener("keydown",event=>{if(event.target instanceof HTMLElement&&["INPUT","SELECT","TEXTAREA","BUTTON"].includes(event.target.tagName))return;const map={ArrowUp:"up",w:"up",W:"up",ArrowDown:"down",s:"down",S:"down",ArrowLeft:"left",a:"left",A:"left",ArrowRight:"right",d:"right",D:"right"};const move=map[event.key];if(move&&playing){event.preventDefault();changeDirection(move)}});
+document.querySelectorAll("[data-direction]").forEach(button=>button.addEventListener("pointerdown",event=>{event.preventDefault();changeDirection(button.dataset.direction)}));
+canvas.addEventListener("pointerdown",event=>{touchStart={x:event.clientX,y:event.clientY}});canvas.addEventListener("pointerup",event=>{if(!touchStart)return;const dx=event.clientX-touchStart.x,dy=event.clientY-touchStart.y;touchStart=null;if(Math.max(Math.abs(dx),Math.abs(dy))<20)return;changeDirection(Math.abs(dx)>Math.abs(dy)?(dx>0?"right":"left"):(dy>0?"down":"up"))});canvas.addEventListener("pointercancel",()=>{touchStart=null});
+$("#startButton").addEventListener("click",startGame);$("#playAgainButton").addEventListener("click",startGame);$("#restartButton").addEventListener("click",startGame);
+$("#soundButton").addEventListener("click",()=>{soundEnabled=!soundEnabled;$("#soundButton").textContent=soundEnabled?"♫ SOUND ON":"♫ SOUND OFF";$("#soundButton").setAttribute("aria-label",soundEnabled?"Mute sound":"Turn on sound")});
+$("#missionButton").addEventListener("click",()=>{const today=new Date(),yesterday=new Date(today);yesterday.setDate(today.getDate()-1);const key=todayKey(),yKey=`wealthiestSnakeMission-${yesterday.getFullYear()}-${yesterday.getMonth()+1}-${yesterday.getDate()}`;let current=0;try{current=Number(localStorage.getItem("wealthiestSnakeMissionStreak"))||0;if(localStorage.getItem(yKey)==="done")current+=1;else current=1;localStorage.setItem("wealthiestSnakeMissionStreak",String(current))}catch{}save(key,"done");updateMission();xp+=5;persist();updateStats();toastFeedback(`Daily mission complete. ${current}-day streak! +5 XP.`)});
+document.querySelectorAll("[data-move]").forEach(button=>button.addEventListener("click",()=>practiceMove(button.dataset.move)));
+$("#portfolioBudget").addEventListener("change",renderAllocationControls);$("#projectionYears").addEventListener("change",renderPortfolio);$("#goalSelect").addEventListener("change",goalSuggestion);$("#applyPortfolio").addEventListener("click",applyPortfolio);$("#principleButton").addEventListener("click",updatePrinciple);
+renderInvestmentCards();renderAllocationControls();updateMission();renderJourney();updateStats();checkAchievements();resetState();
