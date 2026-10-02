@@ -47,6 +47,16 @@ h1 span { color: var(--acid); }
 .stat-card small { font-size: .55rem; letter-spacing: .08em; }
 .cash-card { border-color: rgba(216,255,53,.42); }
 .cash-card strong, .wallet-card strong { color: var(--acid); }
+.rank-progress { display: grid; grid-template-columns: minmax(125px, .8fr) minmax(100px, 1.5fr) minmax(115px, .8fr); align-items: center; gap: 13px; margin: 0 0 16px; padding: 11px 14px; border: 1px solid rgba(255,201,74,.3); border-radius: 11px; background: linear-gradient(95deg, rgba(255,201,74,.09), rgba(255,112,69,.04) 55%, rgba(216,255,53,.06)); }
+.rank-copy { display: grid; gap: 3px; }
+.rank-copy span, .rank-next span { color: var(--muted); font-size: .53rem; font-weight: 800; letter-spacing: .1em; }
+.rank-copy strong { color: var(--gold); font-family: 'Barlow Condensed', sans-serif; font-size: 1rem; font-weight: 900; }
+.rank-track { height: 9px; overflow: hidden; border: 1px solid rgba(255,255,255,.09); border-radius: 99px; background: #302d28; }
+.rank-track i { display: block; width: 0; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--orange), var(--gold), var(--acid)); box-shadow: 0 0 12px rgba(255,201,74,.5); transition: width .25s ease; }
+.rank-next { display: flex; align-items: center; justify-content: flex-end; gap: 7px; text-align: right; }
+.rank-next span { color: var(--acid); }
+.rank-next b { color: var(--orange); font-size: .9rem; }
+
 .play-layout { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(320px, .75fr); align-items: start; gap: 16px; }
 .game-panel, .side-card, .learn-strip { border: 1px solid var(--line); border-radius: 16px; background: rgba(27,26,25,.94); box-shadow: 0 18px 48px rgba(0,0,0,.25); }
 .game-panel { padding: 17px; }
