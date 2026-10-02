@@ -12,6 +12,18 @@ python3 -m http.server 8000
 
 Visit <http://localhost:8000>. Use arrow keys or WASD, swipe on a phone, or tap the direction controls. Sound, daily missions, current run, best score, wallet, assets, XP, achievements, and practice moves save in browser storage on that device.
 
+The page is intentionally game-first: visitors reach the Snake board before the full dashboard, money moves, portfolio builder, and lessons.
+
+## Quick smoke test
+
+Run this after changing the HTML or JavaScript:
+
+```bash
+node smoke-test.js
+```
+
+It verifies that the page initializes, all educational cards render, the Start button opens the game, and the Snake loop advances without a startup exception.
+
 ## Wealth journey
 
 Snake collectibles have different values and effects. A separate original journey track advances as rewards are collected. Players can hold, sell, rent, upgrade, trade, donate, or place eligible assets in a simulated trust category. Cash moves include saving, investing, learning, giving, planned spending, a practice rental purchase, and a luxury purchase. These simplified choices update the fictional dashboard.
