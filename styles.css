@@ -2,3 +2,10 @@
 .badge-section{margin-top:14px}.badge-grid{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:6px;margin-top:12px}.badge{display:grid;justify-items:center;gap:4px;min-height:60px;padding:8px 4px;border:1px solid var(--line);border-radius:7px;background:#151714;opacity:.48;filter:grayscale(1);text-align:center}.badge.unlocked{opacity:1;filter:none;border-color:rgba(229,189,105,.34);background:rgba(229,189,105,.07);box-shadow:inset 0 0 14px rgba(229,189,105,.04)}.badge span{font-size:1.15rem}.badge small{color:var(--muted);font-size:.47rem;line-height:1.2}.challenge-list{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:9px}.challenge-item{display:flex;gap:6px;align-items:center;padding:8px;border:1px solid var(--line);border-radius:6px;color:var(--muted);font-size:.53rem}.challenge-item>span{color:var(--gold);font-weight:900}.challenge-item.done{border-color:rgba(85,196,138,.24);color:var(--green)}#xpBadge{color:var(--gold)}@media(max-width:900px){.badge-grid{grid-template-columns:repeat(5,1fr)}.challenge-list{grid-template-columns:repeat(3,1fr)}}@media(max-width:620px){.badge-grid{grid-template-columns:repeat(5,1fr)}.challenge-list{grid-template-columns:1fr 1fr}}
 
 .mission-progress{display:grid;grid-template-columns:1fr auto;gap:5px 8px}.mission-progress>div{grid-column:1/-1}
+
+/* Game-first flow: visitors play before reviewing their full wealth dashboard. */
+.hero{padding:22px 2px 16px}
+.wealth-results{margin-top:18px}
+.results-heading{margin:0 2px 12px}
+.results-heading h2{margin:0 0 5px;font-family:'Barlow Condensed',sans-serif;font-size:clamp(1.7rem,4vw,2.4rem);line-height:.95}
+.results-heading>p:last-child{margin:0;color:var(--muted);font-size:.7rem}
