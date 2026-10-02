@@ -1,114 +1,86 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#11100d" />
-    <meta name="description" content="Play Snake, stack simulated cash, and practice real-world money moves in the Wealthiest Snake Challenge." />
-    <title>WEALTHIEST SNAKE CHALLENGE</title>
-    <link rel="stylesheet" href="styles.css" />
-  </head>
-  <body>
-    <main class="app-shell">
-      <header class="topbar">
-        <a class="brand" href="#" aria-label="Wealthiest Snake Challenge home"><span class="brand-mark">W$</span><span>EMPOWERED<br />ARCADE</span></a>
-        <span class="season-tag">SEASON 01 <b>•</b> STACK YOUR SKILLS</span>
-      </header>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#10120f" />
+  <meta name="description" content="Play Snake, earn fictional assets, and learn the choices behind building wealth in the Wealthiest Snake Challenge." />
+  <title>WEALTHIEST SNAKE CHALLENGE — Play. Learn. Build.</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<main class="app-shell">
+  <header class="topbar">
+    <a class="brand" href="#top" aria-label="Wealthiest Snake Challenge home"><span class="brand-mark">W$</span><span>EMPOWERED<br>ARCADE</span></a>
+    <nav class="topnav" aria-label="Main sections"><a href="#game">PLAY</a><a href="#portfolio">INVEST</a><a href="#learn">LEARN</a></nav>
+    <span class="season-tag">SEASON 01 <b>✦</b> BUILD YOUR LEGACY</span>
+  </header>
 
-      <section class="hero">
-        <div class="hero-copy">
-          <p class="eyebrow"><span class="spark">✦</span> PLAY SMART. BUILD BIG.</p>
-          <h1>WEALTHIEST<br /><span>SNAKE CHALLENGE</span></h1>
-          <p class="hero-note">Stack game cash. Make your next money move.</p>
-        </div>
-        <div class="hero-stamp" aria-hidden="true"><span>STACK</span><strong>✦</strong><span>YOUR<br />FUTURE</span></div>
-      </section>
+  <section class="hero" id="top">
+    <div class="hero-copy"><p class="eyebrow"><span class="spark">✦</span> PLAY • EARN • BUILD</p><h1>WEALTHIEST<br><span>SNAKE CHALLENGE</span></h1><p class="hero-note">A Snake run with real-world money ideas. Every dollar and asset here is fictional.</p></div>
+    <div class="hero-stamp" aria-hidden="true"><span>PLAY</span><strong>✦</strong><span>YOUR<br>FUTURE</span></div>
+  </section>
 
-      <section class="stats-grid" aria-label="Your game stats">
-        <article class="stat-card cash-card"><span>RUN CASH</span><strong id="score">$0</strong><small>SIMULATED • THIS RUN</small></article>
-        <article class="stat-card"><span>BEST RUN</span><strong id="bestScore">$0</strong><small>PERSONAL RECORD</small></article>
-        <article class="stat-card wallet-card"><span>GAME WALLET</span><strong id="wallet">$0</strong><small>READY FOR A MONEY MOVE</small></article>
-      </section>
+  <section class="networth-card" aria-label="Simulated net worth">
+    <div><p class="eyebrow">YOUR SIMULATED NET WORTH</p><strong id="netWorth">$0</strong><small>Assets minus liabilities • game only</small></div>
+    <div class="networth-side"><span class="rank-chip" id="rankName">STREET STARTER</span><span class="level-label" id="rankLabel">LEVEL 01</span><div class="rank-track" id="rankTrack" role="progressbar" aria-label="Progress to next rank" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i id="rankBar"></i></div><small id="rankAmount">$500 TO NEXT LEVEL</small></div>
+  </section>
 
-      <section class="rank-progress" aria-label="Run level progress">
-        <div class="rank-copy"><span id="rankLabel">LEVEL 01 • ARCADE RANK</span><strong id="rankName">STREET STARTER</strong></div>
-        <div class="rank-track" id="rankTrack" role="progressbar" aria-label="Progress to next rank" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i id="rankBar"></i></div>
-        <div class="rank-next"><span id="rankAmount">$500 TO NEXT RANK</span><b aria-hidden="true">✦</b></div>
-      </section>
+  <section class="dashboard-grid" aria-label="Simulated wealth dashboard">
+    <article class="dash-card"><span>💵 CASH</span><strong id="wallet">$0</strong></article>
+    <article class="dash-card"><span>🏦 SAVINGS</span><strong id="dashSavings">$0</strong></article>
+    <article class="dash-card"><span>📈 INVESTMENTS</span><strong id="dashInvestments">$0</strong></article>
+    <article class="dash-card"><span>🏠 PROPERTY</span><strong id="dashProperty">$0</strong></article>
+    <article class="dash-card"><span>🏪 BUSINESS</span><strong id="dashBusiness">$0</strong></article>
+    <article class="dash-card"><span>🪙 GOLD + ALTS</span><strong id="dashGold">$0</strong></article>
+    <article class="dash-card"><span>🤝 TRUST</span><strong id="dashTrust">$0</strong></article>
+    <article class="dash-card"><span>🎁 GIVING</span><strong id="dashGiving">$0</strong></article>
+    <article class="dash-card"><span>🧾 DEBT</span><strong id="dashDebt">$0</strong></article>
+    <article class="dash-card"><span>🛍️ LIFESTYLE</span><strong id="dashLifestyle">$0</strong></article>
+    <article class="dash-card"><span>TOTAL ASSETS</span><strong id="dashAssets">$0</strong></article>
+    <article class="dash-card"><span>LIABILITIES</span><strong id="dashLiabilities">$0</strong></article>
+  </section>
 
-      <div class="play-layout">
-        <section class="game-panel">
-          <div class="panel-heading">
-            <div><p class="eyebrow">THE MAIN EVENT</p><h2>Stack Run</h2></div>
-            <span class="live-pill"><i></i> ARCADE MODE</span>
-          </div>
-          <div class="board-wrap">
-            <canvas id="gameBoard" width="400" height="400" aria-label="Snake game board"></canvas>
-            <div class="overlay" id="startOverlay">
-              <div class="snake-mark" aria-hidden="true">S$</div>
-              <p class="eyebrow">READY TO RUN IT?</p>
-              <h2>Stack your first $250</h2>
-              <p>Grab cash. Grow your snake. Don’t hit the wall or your own hustle.</p>
-              <button class="primary-button" id="startButton" type="button">START CHALLENGE <span>→</span></button>
-            </div>
-            <div class="overlay hidden" id="gameOverOverlay">
-              <p class="eyebrow" id="endEyebrow">RUN COMPLETE</p>
-              <h2 id="finalScore">Run cash: $0</h2>
-              <p id="resultMessage">Every run is a new chance to level up.</p>
-              <button class="primary-button" id="playAgainButton" type="button">RUN IT BACK <span>↻</span></button>
-            </div>
-          </div>
-          <div class="game-footer">
-            <p><span class="keycap">↑</span><span class="keycap">←</span><span class="keycap">↓</span><span class="keycap">→</span> or WASD <span class="footer-dot">•</span> Swipe on mobile</p>
-            <button class="sound-button" id="soundButton" type="button" aria-label="Mute sound">♫ SOUND ON</button>
-          </div>
-          <section class="controls" aria-label="Direction controls">
-            <button class="direction up" data-direction="up" type="button" aria-label="Move up">↑</button>
-            <button class="direction left" data-direction="left" type="button" aria-label="Move left">←</button>
-            <button class="direction down" data-direction="down" type="button" aria-label="Move down">↓</button>
-            <button class="direction right" data-direction="right" type="button" aria-label="Move right">→</button>
-          </section>
-          <button class="restart-button" id="restartButton" type="button">↻ RESET RUN</button>
-        </section>
-
-        <aside class="side-column">
-          <section class="side-card mission-card">
-            <div class="panel-heading compact"><div><p class="eyebrow">TODAY'S MISSION</p><h2>Small stack. Big habit.</h2></div><span class="mission-icon">✦</span></div>
-            <p>In real life, choose one money move you can repeat this month.</p>
-            <div class="mission-progress"><span id="missionStatus">0 / 1 MOVES</span><div><i id="missionBar"></i></div></div>
-            <button class="text-button" id="missionButton" type="button">MARK A MONEY MOVE DONE <span>＋</span></button>
-          </section>
-
-          <section class="side-card wallet-panel">
-            <div class="panel-heading compact"><div><p class="eyebrow">YOUR SIMULATED WALLET</p><h2>Pick a move</h2></div><span class="wallet-emoji">💸</span></div>
-            <p>Use game cash to practice a choice. This does not move real money.</p>
-            <label class="amount-label" for="allocationAmount">PRACTICE AMOUNT</label>
-            <select id="allocationAmount" aria-label="Practice amount">
-              <option value="250">$250</option><option value="500">$500</option><option value="1000">$1,000</option>
-            </select>
-            <div class="move-grid">
-              <button class="move-button" data-move="save" type="button"><span>🏦</span><strong>Save</strong><small>Build a buffer</small></button>
-              <button class="move-button" data-move="invest" type="button"><span>📈</span><strong>Invest</strong><small>Think long term</small></button>
-              <button class="move-button" data-move="learn" type="button"><span>📚</span><strong>Learn</strong><small>Grow your skills</small></button>
-              <button class="move-button" data-move="enjoy" type="button"><span>🎉</span><strong>Enjoy</strong><small>Spend with intention</small></button>
-            </div>
-            <p class="move-feedback" id="moveFeedback" aria-live="polite">Choose a move when your wallet has enough game cash.</p>
-          </section>
-        </aside>
+  <div class="play-layout" id="game">
+    <section class="game-panel">
+      <div class="panel-heading"><div><p class="eyebrow">THE MAIN EVENT</p><h2>Stack Run</h2></div><span class="live-pill"><i></i> ARCADE MODE</span></div>
+      <div class="run-stats"><div><span>RUN SCORE</span><strong id="score">$0</strong></div><div><span>BEST RUN</span><strong id="bestScore">$0</strong></div><div><span>XP</span><strong id="xpValue">0</strong></div></div>
+      <div class="board-wrap"><canvas id="gameBoard" width="400" height="400" aria-label="Snake game board"></canvas>
+        <div class="overlay" id="startOverlay"><div class="snake-mark" aria-hidden="true">S$</div><p class="eyebrow">READY TO RUN IT?</p><h2>Earn your first asset</h2><p>Collect cash, property, gold, skills, and more. Make each move count.</p><button class="primary-button" id="startButton" type="button">START CHALLENGE <span>→</span></button></div>
+        <div class="overlay hidden" id="gameOverOverlay"><p class="eyebrow" id="endEyebrow">RUN COMPLETE</p><h2 id="finalScore">Run score: $0</h2><p id="resultMessage">Every run is a new chance to level up.</p><button class="primary-button" id="playAgainButton" type="button">RUN IT BACK <span>↻</span></button></div>
       </div>
+      <div class="game-footer"><p><span class="keycap">↑</span><span class="keycap">←</span><span class="keycap">↓</span><span class="keycap">→</span> or WASD <i>•</i> Swipe on mobile</p><button class="sound-button" id="soundButton" type="button" aria-label="Mute sound">♫ SOUND ON</button></div>
+      <section class="controls" aria-label="Direction controls"><button class="direction up" data-direction="up" type="button" aria-label="Move up">↑</button><button class="direction left" data-direction="left" type="button" aria-label="Move left">←</button><button class="direction down" data-direction="down" type="button" aria-label="Move down">↓</button><button class="direction right" data-direction="right" type="button" aria-label="Move right">→</button></section>
+      <button class="restart-button" id="restartButton" type="button">↻ RESET RUN</button>
+    </section>
 
-      <section class="learn-strip">
-        <div class="learn-title"><p class="eyebrow">LEVEL UP IRL</p><h2>Make $500 a month<br />a repeatable move.</h2><p>Start with a plan you can sustain. Learn the basics before choosing any investment.</p></div>
-        <ol class="steps">
-          <li><b>01</b><span><strong>Know your cash flow</strong><small>Track what comes in and what goes out.</small></span></li>
-          <li><b>02</b><span><strong>Build a safety buffer</strong><small>Set aside money for surprises and near-term needs.</small></span></li>
-          <li><b>03</b><span><strong>Pick a monthly target</strong><small>Try a realistic amount, then work toward $500.</small></span></li>
-          <li><b>04</b><span><strong>Learn before you invest</strong><small>Understand risk, fees, time horizon, and diversification.</small></span></li>
-        </ol>
-      </section>
+    <aside class="side-column">
+      <section class="side-card journey-card"><div class="panel-heading compact"><div><p class="eyebrow">YOUR WEALTH JOURNEY</p><h2 id="stageTitle">Start with cash flow</h2></div><span class="mission-icon">✦</span></div><p id="stageNote">Each pickup moves you through a fresh path from cash basics to ownership and legacy.</p><div class="journey-track" id="journeyTrack" aria-label="Wealth journey board"></div><div class="journey-progress"><span id="journeyStatus">0 SPACES CLEARED</span><b id="journeyNext">NEXT: CASH</b></div></section>
+      <section class="side-card inventory-card"><div class="panel-heading compact"><div><p class="eyebrow">YOUR ASSET VAULT</p><h2>Acquired assets</h2></div><span class="wallet-emoji">🗝️</span></div><p>Choose a move that fits each asset. All values are simulated.</p><div id="assetList" class="asset-list"><p class="empty-state">Your next run can start the collection.</p></div></section>
+      <section class="side-card mission-card"><div class="panel-heading compact"><div><p class="eyebrow">TODAY'S MISSION</p><h2>Small stack. Big habit.</h2></div><span class="mission-icon">⚡</span></div><p>Pick one money habit to practice today.</p><div class="mission-progress"><span id="missionStatus">0 / 1 MOVES</span><span id="missionStreak">0 DAY STREAK</span><div><i id="missionBar"></i></div></div><button class="text-button" id="missionButton" type="button">MARK A MONEY MOVE DONE <span>＋</span></button></section>
+    </aside>
+  </div>
 
-      <footer class="disclaimer"><span>✦ GAME CASH IS JUST FOR PLAY.</span> Money lessons are general education, not personalized financial advice. Real investing involves risk, including loss.</footer>
-    </main>
-    <script src="game.js"></script>
-  </body>
+  <section class="badge-section section-card"><div class="section-header"><div class="section-intro"><p class="eyebrow">LEVELS • XP • ACHIEVEMENTS</p><h2>Every smart move builds momentum.</h2><p>Clear challenges, unlock badges, and grow your simulated wealth rank.</p></div><span class="sim-tag">XP <b id="xpBadge">0</b></span></div><div id="badgeGrid" class="badge-grid"></div><div id="challengeList" class="challenge-list"></div></section>
+
+  <section class="move-section section-card" id="moves"><div class="section-intro"><p class="eyebrow">MONEY MOVES</p><h2>Give your game cash a job.</h2><p>Practice saving, investing, learning, or intentional spending. The dashboard updates with each choice.</p></div><div class="practice-row"><label for="allocationAmount">PRACTICE AMOUNT</label><select id="allocationAmount" aria-label="Practice amount"><option value="250">$250</option><option value="500">$500</option><option value="1000">$1,000</option></select></div><div class="move-grid"><button class="move-button" data-move="save" type="button"><span>🏦</span><strong>Save</strong><small>Build a buffer</small></button><button class="move-button" data-move="invest" type="button"><span>📈</span><strong>Invest</strong><small>Choose a portfolio</small></button><button class="move-button" data-move="learn" type="button"><span>📚</span><strong>Learn</strong><small>Build a skill</small></button><button class="move-button" data-move="enjoy" type="button"><span>🎉</span><strong>Enjoy</strong><small>Spend with intention</small></button><button class="move-button" data-move="give" type="button"><span>🤝</span><strong>Give</strong><small>Support a cause</small></button><button class="move-button" data-move="rental" type="button"><span>🏠</span><strong>Buy rental</strong><small>Asset + rent, with costs</small></button><button class="move-button" data-move="luxury" type="button"><span>🚘</span><strong>Luxury car</strong><small>Cash down, lifestyle cost</small></button></div><p class="move-feedback" id="moveFeedback" aria-live="polite">Choose a move when you have enough game cash.</p></section>
+
+  <section class="portfolio-section section-card" id="portfolio"><div class="section-header"><div class="section-intro"><p class="eyebrow">SIMULATED PORTFOLIO BUILDER</p><h2>Choose your goal. Build your mix.</h2><p>No one option fits every goal. Compare trade-offs, then use fictional money to explore what a mix can do.</p></div><span class="sim-tag">FICTIONAL MONEY ONLY</span></div>
+    <div class="portfolio-controls"><label>WHAT'S YOUR GOAL?<select id="goalSelect"><option value="emergency">Emergency fund</option><option value="house">Save for a house</option><option value="retirement">Retirement</option><option value="growth">Long-term growth</option><option value="income">Income</option><option value="business">Start a business</option><option value="education">Education</option></select></label><label>MONTHLY CONTRIBUTION TO MODEL<select id="portfolioBudget"><option value="500">$500 / month</option><option value="2000">$2,000 / month</option><option value="5000">$5,000 / month</option></select></label><label>PROJECTION PERIOD<select id="projectionYears"><option value="1">1 year</option><option value="5">5 years</option><option value="10">10 years</option><option value="20">20 years</option></select></label></div>
+    <div class="portfolio-workspace"><div class="allocation-list" id="allocationList"></div><aside class="portfolio-summary"><p class="eyebrow">HYPOTHETICAL SNAPSHOT</p><div class="portfolio-value"><span>PROJECTED VALUE</span><strong id="projectedValue">$0</strong></div><div class="summary-row"><span>Total contributions over period</span><b id="summaryInvested">$0</b></div><div class="summary-row"><span>Estimated annual income</span><b id="estimatedIncome">$0</b></div><div class="summary-row"><span>Estimated growth</span><b id="estimatedGrowth">$0</b></div><div class="summary-row"><span>Portfolio risk mix</span><b id="portfolioRisk">—</b></div><div class="allocation-bar" id="allocationBar" aria-label="Portfolio allocation"></div><p class="projection-note" id="projectionNote">Illustrative projection only. Actual results vary; losses are possible.</p><button id="applyPortfolio" class="primary-button wide-button" type="button">INVEST SIMULATED CASH</button><p class="portfolio-feedback" id="portfolioFeedback" aria-live="polite">Change allocations to see the mix update.</p></aside></div>
+    <p class="rate-note" id="rateNote"></p>
+  </section>
+
+  <section class="investment-section" id="learn"><div class="section-header"><div class="section-intro"><p class="eyebrow">THE LEARNING WALL</p><h2>Different tools. Different trade-offs.</h2><p>Explore the basics in plain English. Risk, return, access, costs, taxes, and time horizon all matter.</p></div><button class="text-button small-button" id="principleButton" type="button">ONE MONEY PRINCIPLE <span>↻</span></button></div><div class="principle-callout" id="principleCallout"><strong>COMPOUNDING 💰</strong><span>Your money can earn money, and then those earnings can earn money too. Time can make a big difference.</span></div><div class="investment-grid" id="investmentGrid"></div></section>
+
+  <section class="challenge-strip"><div><p class="eyebrow">MONTHLY INVESTING CHALLENGE</p><h2>You have $500 this month.<br>What do you do with it?</h2><p>Try a mix, compare goals, and see a hypothetical 1, 5, 10, or 20-year path.</p></div><div class="challenge-checklist"><p><b>✦</b> Build a $1,000 emergency fund</p><p><b>✦</b> Invest your first $500</p><p><b>✦</b> Create a diversified portfolio</p><p><b>✦</b> Reduce debt and grow a skill</p></div><a class="primary-button link-button" href="#portfolio">TRY THE CHALLENGE <span>↑</span></a></section>
+
+  <section class="learn-strip"><div class="learn-title"><p class="eyebrow">LEVEL UP IRL</p><h2>Wealth is a series<br>of informed moves.</h2><p>Practice the basics: earn, save, spend intentionally, invest for a goal, and protect what you build.</p></div><ol class="steps"><li><b>01</b><span><strong>Know your cash flow</strong><small>Track what comes in and what goes out.</small></span></li><li><b>02</b><span><strong>Build a safety buffer</strong><small>Keep near-term needs accessible.</small></span></li><li><b>03</b><span><strong>Match money to a goal</strong><small>Time horizon can shape your choices.</small></span></li><li><b>04</b><span><strong>Understand the trade-offs</strong><small>Risk, costs, liquidity, and taxes matter.</small></span></li></ol></section>
+  <footer class="disclaimer"><span>✦ GAME MONEY IS JUST FOR PLAY.</span> This browser-based MVP is fictional financial education, not personalized financial, tax, legal, or investment advice. No accounts, brokerages, or real transactions are connected. Returns are not guaranteed; real investing involves risk, including loss. Educational rate assumptions are not live quotes.</footer>
+</main>
+<script src="game.js"></script>
+</body>
 </html>
