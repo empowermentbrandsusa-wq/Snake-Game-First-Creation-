@@ -5,6 +5,11 @@ const context = canvas.getContext("2d");
 const scoreElement = document.querySelector("#score");
 const bestScoreElement = document.querySelector("#bestScore");
 const walletElement = document.querySelector("#wallet");
+const rankLabel = document.querySelector("#rankLabel");
+const rankName = document.querySelector("#rankName");
+const rankTrack = document.querySelector("#rankTrack");
+const rankBar = document.querySelector("#rankBar");
+const rankAmount = document.querySelector("#rankAmount");
 const startOverlay = document.querySelector("#startOverlay");
 const gameOverOverlay = document.querySelector("#gameOverOverlay");
 const finalScoreElement = document.querySelector("#finalScore");
@@ -16,6 +21,13 @@ const gridSize = 20;
 const cellSize = canvas.width / gridSize;
 const speed = 115;
 const CASH_PER_BILL = 250;
+const rankTiers = [
+  { floor: 0, name: "STREET STARTER" },
+  { floor: 500, name: "CASH CHASER" },
+  { floor: 1500, name: "STACK BUILDER" },
+  { floor: 3000, name: "MONEY MOVER" },
+  { floor: 6000, name: "WEALTH BOSS" },
+];
 const directions = {
   up: { x: 0, y: -1 },
   down: { x: 0, y: 1 },
@@ -70,6 +82,22 @@ function updateStats() {
   scoreElement.textContent = formatMoney(score);
   bestScoreElement.textContent = formatMoney(bestScore);
   walletElement.textContent = formatMoney(wallet);
+  updateRank();
+}
+
+function updateRank() {
+  let index = rankTiers.length - 1;
+  for (let i = 0; i < rankTiers.length - 1; i += 1) {
+    if (score < rankTiers[i + 1].floor) { index = i; break; }
+  }
+  const current = rankTiers[index];
+  const next = rankTiers[index + 1];
+  const progress = next ? Math.floor(((score - current.floor) / (next.floor - current.floor)) * 100) : 100;
+  rankLabel.textContent = `LEVEL ${String(index + 1).padStart(2, "0")} • ARCADE RANK`;
+  rankName.textContent = current.name;
+  rankBar.style.width = `${progress}%`;
+  rankTrack.setAttribute("aria-valuenow", String(progress));
+  rankAmount.textContent = next ? `${formatMoney(next.floor - score)} TO NEXT RANK` : "TOP RANK • KEEP STACKING";
 }
 
 function resetState() {
