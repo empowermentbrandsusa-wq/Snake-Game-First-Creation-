@@ -12,7 +12,7 @@ python3 -m http.server 8000
 
 Visit <http://localhost:8000>. Use arrow keys or WASD, swipe on a phone, or tap the direction controls. Sound, daily missions, current run, best score, wallet, assets, XP, achievements, and practice moves save in browser storage on that device.
 
-The page is intentionally game-first: visitors reach the Snake board before the full dashboard, money moves, portfolio builder, and lessons.
+The page is intentionally game-first: visitors reach the Snake board before the full dashboard, money moves, portfolio builder, and lessons. The play experience includes a live wealth command center, reward preview, selectable difficulty, pause/resume, mobile swipe controls, and immediate decision feedback.
 
 ## Quick smoke test
 
