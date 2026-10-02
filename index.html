@@ -24,26 +24,6 @@
     <div class="hero-stamp" aria-hidden="true"><span>PLAY</span><strong>✦</strong><span>YOUR<br>FUTURE</span></div>
   </section>
 
-  <section class="networth-card" aria-label="Simulated net worth">
-    <div><p class="eyebrow">YOUR SIMULATED NET WORTH</p><strong id="netWorth">$0</strong><small>Assets minus liabilities • game only</small></div>
-    <div class="networth-side"><span class="rank-chip" id="rankName">STREET STARTER</span><span class="level-label" id="rankLabel">LEVEL 01</span><div class="rank-track" id="rankTrack" role="progressbar" aria-label="Progress to next rank" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i id="rankBar"></i></div><small id="rankAmount">$500 TO NEXT LEVEL</small></div>
-  </section>
-
-  <section class="dashboard-grid" aria-label="Simulated wealth dashboard">
-    <article class="dash-card"><span>💵 CASH</span><strong id="wallet">$0</strong></article>
-    <article class="dash-card"><span>🏦 SAVINGS</span><strong id="dashSavings">$0</strong></article>
-    <article class="dash-card"><span>📈 INVESTMENTS</span><strong id="dashInvestments">$0</strong></article>
-    <article class="dash-card"><span>🏠 PROPERTY</span><strong id="dashProperty">$0</strong></article>
-    <article class="dash-card"><span>🏪 BUSINESS</span><strong id="dashBusiness">$0</strong></article>
-    <article class="dash-card"><span>🪙 GOLD + ALTS</span><strong id="dashGold">$0</strong></article>
-    <article class="dash-card"><span>🤝 TRUST</span><strong id="dashTrust">$0</strong></article>
-    <article class="dash-card"><span>🎁 GIVING</span><strong id="dashGiving">$0</strong></article>
-    <article class="dash-card"><span>🧾 DEBT</span><strong id="dashDebt">$0</strong></article>
-    <article class="dash-card"><span>🛍️ LIFESTYLE</span><strong id="dashLifestyle">$0</strong></article>
-    <article class="dash-card"><span>TOTAL ASSETS</span><strong id="dashAssets">$0</strong></article>
-    <article class="dash-card"><span>LIABILITIES</span><strong id="dashLiabilities">$0</strong></article>
-  </section>
-
   <div class="play-layout" id="game">
     <section class="game-panel">
       <div class="panel-heading"><div><p class="eyebrow">THE MAIN EVENT</p><h2>Stack Run</h2></div><span class="live-pill"><i></i> ARCADE MODE</span></div>
@@ -63,6 +43,28 @@
       <section class="side-card mission-card"><div class="panel-heading compact"><div><p class="eyebrow">TODAY'S MISSION</p><h2>Small stack. Big habit.</h2></div><span class="mission-icon">⚡</span></div><p>Pick one money habit to practice today.</p><div class="mission-progress"><span id="missionStatus">0 / 1 MOVES</span><span id="missionStreak">0 DAY STREAK</span><div><i id="missionBar"></i></div></div><button class="text-button" id="missionButton" type="button">MARK A MONEY MOVE DONE <span>＋</span></button></section>
     </aside>
   </div>
+
+  <section class="wealth-results" aria-labelledby="wealthResultsTitle">
+    <div class="results-heading"><p class="eyebrow">AFTER THE RUN</p><h2 id="wealthResultsTitle">Make the money moves.</h2><p>Play first. Then decide what to do with everything you earned.</p></div>
+    <section class="networth-card" aria-label="Simulated net worth">
+      <div><p class="eyebrow">YOUR SIMULATED NET WORTH</p><strong id="netWorth">$0</strong><small>Assets minus liabilities • game only</small></div>
+      <div class="networth-side"><span class="rank-chip" id="rankName">STREET STARTER</span><span class="level-label" id="rankLabel">LEVEL 01</span><div class="rank-track" id="rankTrack" role="progressbar" aria-label="Progress to next rank" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i id="rankBar"></i></div><small id="rankAmount">$500 TO NEXT LEVEL</small></div>
+    </section>
+    <section class="dashboard-grid" aria-label="Simulated wealth dashboard">
+      <article class="dash-card"><span>💵 CASH</span><strong id="wallet">$0</strong></article>
+      <article class="dash-card"><span>🏦 SAVINGS</span><strong id="dashSavings">$0</strong></article>
+      <article class="dash-card"><span>📈 INVESTMENTS</span><strong id="dashInvestments">$0</strong></article>
+      <article class="dash-card"><span>🏠 PROPERTY</span><strong id="dashProperty">$0</strong></article>
+      <article class="dash-card"><span>🏪 BUSINESS</span><strong id="dashBusiness">$0</strong></article>
+      <article class="dash-card"><span>🪙 GOLD + ALTS</span><strong id="dashGold">$0</strong></article>
+      <article class="dash-card"><span>🤝 TRUST</span><strong id="dashTrust">$0</strong></article>
+      <article class="dash-card"><span>🎁 GIVING</span><strong id="dashGiving">$0</strong></article>
+      <article class="dash-card"><span>🧾 DEBT</span><strong id="dashDebt">$0</strong></article>
+      <article class="dash-card"><span>🛍️ LIFESTYLE</span><strong id="dashLifestyle">$0</strong></article>
+      <article class="dash-card"><span>TOTAL ASSETS</span><strong id="dashAssets">$0</strong></article>
+      <article class="dash-card"><span>LIABILITIES</span><strong id="dashLiabilities">$0</strong></article>
+    </section>
+  </section>
 
   <section class="badge-section section-card"><div class="section-header"><div class="section-intro"><p class="eyebrow">LEVELS • XP • ACHIEVEMENTS</p><h2>Every smart move builds momentum.</h2><p>Clear challenges, unlock badges, and grow your simulated wealth rank.</p></div><span class="sim-tag">XP <b id="xpBadge">0</b></span></div><div id="badgeGrid" class="badge-grid"></div><div id="challengeList" class="challenge-list"></div></section>
 
