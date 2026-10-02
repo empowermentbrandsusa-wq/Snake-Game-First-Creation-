@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#101a16" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <title>Pocket Snake</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="game-shell">
+      <header class="game-header">
+        <div>
+          <p class="eyebrow">Classic arcade</p>
+          <h1>POCKET <span>SNAKE</span></h1>
+        </div>
+        <button class="sound-button" id="soundButton" type="button" aria-label="Mute sound">♪</button>
+      </header>
+
+      <section class="scorebar" aria-label="Game scores">
+        <div><span>Score</span><strong id="score">000</strong></div>
+        <div class="best"><span>Best</span><strong id="bestScore">000</strong></div>
+      </section>
+
+      <div class="board-wrap">
+        <canvas id="gameBoard" width="400" height="400" aria-label="Snake game board"></canvas>
+        <div class="overlay" id="startOverlay">
+          <div class="snake-mark" aria-hidden="true">S</div>
+          <h2>Ready?</h2>
+          <p>Eat the fruit. Don’t bite yourself.</p>
+          <button class="primary-button" id="startButton" type="button">Start game</button>
+        </div>
+        <div class="overlay hidden" id="gameOverOverlay">
+          <p class="eyebrow">Game over</p>
+          <h2 id="finalScore">Score 000</h2>
+          <p id="resultMessage">That was a good run.</p>
+          <button class="primary-button" id="playAgainButton" type="button">Play again</button>
+        </div>
+      </div>
+
+      <p class="hint">Swipe the board or use the controls</p>
+
+      <section class="controls" aria-label="Direction controls">
+        <button class="direction up" data-direction="up" type="button" aria-label="Move up">↑</button>
+        <button class="direction left" data-direction="left" type="button" aria-label="Move left">←</button>
+        <button class="direction down" data-direction="down" type="button" aria-label="Move down">↓</button>
+        <button class="direction right" data-direction="right" type="button" aria-label="Move right">→</button>
+      </section>
+
+      <button class="restart-button" id="restartButton" type="button">↻ Restart game</button>
+    </main>
+    <script src="game.js"></script>
+  </body>
+</html>
