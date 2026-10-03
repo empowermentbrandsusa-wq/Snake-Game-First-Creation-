@@ -41,3 +41,8 @@ body{background:radial-gradient(circle at 12% -8%,rgba(98,212,154,.11),transpare
 @media(max-width:900px){.principle-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:620px){.decision-overlay{padding:9px}.decision-card{padding:14px}.decision-choices button{padding:10px}.principles-section .section-header{display:grid}.mastery-summary{width:100%}.principle-grid{grid-template-columns:1fr 1fr}.principle-card{min-height:145px;padding:11px}}
 @media(max-width:390px){.principle-grid{grid-template-columns:1fr}.principle-card{min-height:auto}.decision-card h2{font-size:1.65rem}.decision-card>p:not(.eyebrow){font-size:.67rem}}
+
+
+/* Blue background refresh: keep the play surfaces high-contrast and unchanged. */
+html{background:#071a35}
+body{background:radial-gradient(ellipse at 12% 0%,rgba(44,112,194,.38),transparent 36rem),radial-gradient(ellipse at 96% 30%,rgba(20,73,139,.32),transparent 38rem),linear-gradient(145deg,#071a35 0%,#0a2850 48%,#06162d 100%);}
