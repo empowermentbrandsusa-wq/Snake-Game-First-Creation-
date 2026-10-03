@@ -28,6 +28,8 @@ It verifies that the page initializes, all educational cards render, the Start b
 
 Snake collectibles have different values and effects. A separate original journey track advances as rewards are collected. Players can hold, sell, rent, upgrade, trade, donate, or place eligible assets in a simulated trust category. Cash moves include saving, investing, learning, giving, planned spending, a practice rental purchase, and a luxury purchase. These simplified choices update the fictional dashboard.
 
+Every third collectible now opens a short decision lesson inside the game. The eight-part curriculum covers cash flow, emergency funds, debt, diversification, compounding, productive ownership, protection, and giving/legacy. Players choose among realistic trade-offs, see the simulated consequence on their dashboard, and build principle mastery through repeated decisions. No option is reduced to a simplistic “good” or “bad” label; the outcome explains purpose, risk, opportunity cost, and constraints.
+
 The portfolio builder lets players set a goal, allocate monthly simulated cash, compare a risk mix, estimate annual income, and view hypothetical 1-, 5-, 10-, or 20-year scenarios. Rate assumptions are centralized in `RATE_ASSUMPTIONS` in `game.js` and labeled as educational estimates, not live quotes or forecasts.
 
 ## Important
