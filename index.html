@@ -34,6 +34,19 @@
       <div class="board-wrap"><canvas id="gameBoard" width="400" height="400" aria-label="Snake game board"></canvas>
         <div class="overlay" id="startOverlay"><div class="snake-mark" aria-hidden="true">S$</div><p class="eyebrow">READY TO RUN IT?</p><h2>Earn your first asset</h2><p>Collect cash, property, gold, skills, and more. Make each move count.</p><button class="primary-button" id="startButton" type="button">START CHALLENGE <span>→</span></button></div>
         <div class="overlay hidden" id="gameOverOverlay"><p class="eyebrow" id="endEyebrow">RUN COMPLETE</p><h2 id="finalScore">Run score: $0</h2><p id="resultMessage">Every run is a new chance to level up.</p><button class="primary-button" id="playAgainButton" type="button">RUN IT BACK <span>↻</span></button></div>
+        <div class="decision-overlay hidden" id="decisionOverlay" role="dialog" aria-modal="true" aria-labelledby="decisionTitle">
+          <div class="decision-card">
+            <div class="decision-progress"><span id="decisionPrinciple">WEALTH PRINCIPLE</span><b id="decisionNumber">01 / 08</b></div>
+            <p class="eyebrow" id="decisionEyebrow">DECISION MOMENT</p>
+            <h2 id="decisionTitle">Choose your next move</h2>
+            <p id="decisionScenario">A short financial scenario will appear here.</p>
+            <div class="decision-choices" id="decisionChoices"></div>
+            <div class="decision-outcome hidden" id="decisionOutcome">
+              <span>WHAT THIS TEACHES</span><h3 id="decisionOutcomeTitle">Your choice created a trade-off.</h3><p id="decisionOutcomeText"></p>
+              <button class="primary-button" id="continueDecisionButton" type="button">CONTINUE THE RUN <span>→</span></button>
+            </div>
+          </div>
+        </div>
         <div class="game-toast" id="gameToast" aria-live="polite"></div>
       </div>
       <div class="game-footer"><p><span class="keycap">↑</span><span class="keycap">←</span><span class="keycap">↓</span><span class="keycap">→</span> or WASD <i>•</i> Swipe on mobile</p><div class="game-tools"><label>DIFFICULTY <select id="difficultySelect" aria-label="Game difficulty"><option value="easy">EASY</option><option value="standard" selected>STANDARD</option><option value="pro">PRO</option></select></label><button class="sound-button" id="pauseButton" type="button">Ⅱ PAUSE</button><button class="sound-button" id="soundButton" type="button" aria-label="Mute sound">♫ SOUND ON</button></div></div>
@@ -42,7 +55,7 @@
     </section>
 
     <aside class="side-column">
-      <section class="side-card command-card"><p class="eyebrow">WEALTH COMMAND CENTER</p><div class="command-net"><span>SIMULATED NET WORTH</span><strong id="quickNetWorth">$0</strong></div><div class="command-metrics"><div><span>GAME CASH</span><b id="quickCash">$0</b></div><div><span>OWNED ASSETS</span><b id="quickAssets">0</b></div><div><span>WEALTH RANK</span><b id="quickRank">STREET STARTER</b></div></div><p class="command-note">Your decisions update these numbers after every run.</p></section>
+      <section class="side-card command-card"><p class="eyebrow">WEALTH COMMAND CENTER</p><div class="command-net"><span>SIMULATED NET WORTH</span><strong id="quickNetWorth">$0</strong></div><div class="command-metrics"><div><span>GAME CASH</span><b id="quickCash">$0</b></div><div><span>OWNED ASSETS</span><b id="quickAssets">0</b></div><div><span>PRINCIPLES EXPERIENCED</span><b id="quickMastery">0 / 8</b></div><div><span>WEALTH RANK</span><b id="quickRank">STREET STARTER</b></div></div><p class="command-note">Your decisions update these numbers after every run.</p></section>
       <section class="side-card journey-card"><div class="panel-heading compact"><div><p class="eyebrow">YOUR WEALTH JOURNEY</p><h2 id="stageTitle">Start with cash flow</h2></div><span class="mission-icon">✦</span></div><p id="stageNote">Each pickup moves you through a fresh path from cash basics to ownership and legacy.</p><div class="journey-track" id="journeyTrack" aria-label="Wealth journey board"></div><div class="journey-progress"><span id="journeyStatus">0 SPACES CLEARED</span><b id="journeyNext">NEXT: CASH</b></div></section>
       <section class="side-card mission-card"><div class="panel-heading compact"><div><p class="eyebrow">TODAY'S MISSION</p><h2>Small stack. Big habit.</h2></div><span class="mission-icon">⚡</span></div><p>Pick one money habit to practice today.</p><div class="mission-progress"><span id="missionStatus">0 / 1 MOVES</span><span id="missionStreak">0 DAY STREAK</span><div><i id="missionBar"></i></div></div><button class="text-button" id="missionButton" type="button">MARK A MONEY MOVE DONE <span>＋</span></button></section>
     </aside>
@@ -70,6 +83,8 @@
     </section>
   </section>
 
+  <section class="principles-section section-card" id="principles"><div class="section-header"><div class="section-intro"><p class="eyebrow">WEALTH PRINCIPLES</p><h2>Learn by making the decision.</h2><p>Every third pickup unlocks a short scenario. Choose a path, see the financial consequence, and build practical mastery through repetition.</p></div><div class="mastery-summary"><span>CURRICULUM PROGRESS</span><strong id="masteryCount">0 / 8</strong><div class="mastery-track"><i id="masteryBar"></i></div></div></div><div class="principle-grid" id="principleGrid"></div></section>
+
   <section class="asset-vault section-card"><div class="section-header"><div class="section-intro"><p class="eyebrow">ASSET MANAGEMENT</p><h2>Your asset vault.</h2><p>Review what you earned, then choose only the actions that fit each asset.</p></div><span class="sim-tag">SIMULATED ASSETS</span></div><div id="assetList" class="asset-list asset-list-wide"><p class="empty-state">Complete a Wealth Run to begin your collection.</p></div></section>
 
   <section class="badge-section section-card"><div class="section-header"><div class="section-intro"><p class="eyebrow">LEVELS • XP • ACHIEVEMENTS</p><h2>Every smart move builds momentum.</h2><p>Clear challenges, unlock badges, and grow your simulated wealth rank.</p></div><span class="sim-tag">XP <b id="xpBadge">0</b></span></div><div id="badgeGrid" class="badge-grid"></div><div id="challengeList" class="challenge-list"></div></section>
@@ -87,7 +102,7 @@
   <section class="challenge-strip"><div><p class="eyebrow">MONTHLY INVESTING CHALLENGE</p><h2>You have $500 this month.<br>What do you do with it?</h2><p>Try a mix, compare goals, and see a hypothetical 1, 5, 10, or 20-year path.</p></div><div class="challenge-checklist"><p><b>✦</b> Build a $1,000 emergency fund</p><p><b>✦</b> Invest your first $500</p><p><b>✦</b> Create a diversified portfolio</p><p><b>✦</b> Reduce debt and grow a skill</p></div><a class="primary-button link-button" href="#portfolio">TRY THE CHALLENGE <span>↑</span></a></section>
 
   <section class="learn-strip"><div class="learn-title"><p class="eyebrow">LEVEL UP IRL</p><h2>Wealth is a series<br>of informed moves.</h2><p>Practice the basics: earn, save, spend intentionally, invest for a goal, and protect what you build.</p></div><ol class="steps"><li><b>01</b><span><strong>Know your cash flow</strong><small>Track what comes in and what goes out.</small></span></li><li><b>02</b><span><strong>Build a safety buffer</strong><small>Keep near-term needs accessible.</small></span></li><li><b>03</b><span><strong>Match money to a goal</strong><small>Time horizon can shape your choices.</small></span></li><li><b>04</b><span><strong>Understand the trade-offs</strong><small>Risk, costs, liquidity, and taxes matter.</small></span></li></ol></section>
-  <footer class="disclaimer"><span>✦ GAME MONEY IS JUST FOR PLAY.</span> This browser-based MVP is fictional financial education, not personalized financial, tax, legal, or investment advice. No accounts, brokerages, or real transactions are connected. Returns are not guaranteed; real investing involves risk, including loss. Educational rate assumptions are not live quotes.</footer>
+  <footer class="disclaimer"><span>✦ GAME MONEY IS JUST FOR PLAY.</span> This browser-based MVP is fictional financial education, not personalized financial, tax, legal, or investment advice. No accounts, brokerages, or real transactions are connected. Returns are not guaranteed; real investing involves risk, including loss. Educational rate assumptions are not live quotes. Wealth in this game describes financial resources—not a person's worth or value.</footer>
 </main>
 <script src="game.js"></script>
 </body>
